@@ -46,5 +46,13 @@ Hadoop配置文件包含name/value属性作为XML数据。这些文件按它们�
 ##### 变量扩展  
 
 
+#### ApplicationSubmissionContext  
+ApplicationSubmissionContext是一个抽象类，包含了给一个application运行ApplicationMaster的所有信息。客户端定义了submission context，包含了应用的属性，运行ApplicationMaster服务的命令和资源请求的列表，等等。在应用提交请求期间，客户端会发送这个context到ResourceManager。ResourceManager使用这个context保存应用的状态并且在一个NodeManager节点上运行ApplicationMaster进程。  
+
+ApplicationSubmissionContext类包含下面的内容：
+* 应用ID、名字和类型
+* 队列和它的优先级
+*
+
 
 ### 编写自己的YARN应用
