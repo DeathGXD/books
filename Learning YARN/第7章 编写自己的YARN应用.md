@@ -47,7 +47,7 @@ Hadoop配置文件包含name/value属性作为XML数据。这些文件按它们�
 
 
 #### ApplicationSubmissionContext  
-ApplicationSubmissionContext是一个抽象类，包含了给一个application运行ApplicationMaster的所有信息。客户端定义了submission context，包含了应用的属性，运行ApplicationMaster服务的命令和资源请求的列表，等等。在应用提交请求期间，客户端会发送这个context到ResourceManager。ResourceManager使用这个context保存应用的状态并且在一个NodeManager节点上运行ApplicationMaster进程。  
+ApplicationSubmissionContext是一个抽象类，包含了给一个application运行ApplicationMaster所需要的所有信息。客户端定义了submission context，包含了应用的属性，运行ApplicationMaster服务的命令和资源请求的列表，等等。在应用提交请求期间，客户端会发送这个context到ResourceManager。ResourceManager使用这个context保存应用的状态并且在一个NodeManager节点上运行ApplicationMaster进程。  
 
 ApplicationSubmissionContext类包含下面的内容：
 * 应用ID、名字和类型
@@ -58,7 +58,29 @@ ApplicationSubmissionContext类包含下面的内容：
 
 阅读更多关于ApplicatiionSubmissionContext类的细节，可以参考位于(http://hadoop.apache.org/docs/r2.5.2/api/org/apache/hadoop/yarn/api/records/ApplicationSubmissionContext.html)的Hadoop API文档。  
 
-#### ContainerLaunchContext
+#### ContainerLaunchContext  
+ContainerLaunchContext是一个抽象类，包含了在一个节点上启动container所需要的所有信息。NodeManager进程使用launch context启动与application相关联的containers。ApplicationMaster是application的第一个container并且它的launch context被定义在ApplicationSubmissionContext类中。  
+
+ContainerLaunchContext对象包含下面的信息：
+* 在启动期间被使用的local resource
+*   
+
+
+#### 通信协议  
+
+
+##### ApplicationClientProtocol  
+
+
+##### ApplicationMasterProcotol  
+
+
+##### ContainerManagementProcotol  
+
+##### ApplicationHistoryProcotol  
+
+
+#### YARN client API
 
 
 ### 编写自己的YARN应用
