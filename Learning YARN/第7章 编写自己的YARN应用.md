@@ -52,7 +52,13 @@ ApplicationSubmissionContext是一个抽象类，包含了给一个application�
 ApplicationSubmissionContext类包含下面的内容：
 * 应用ID、名字和类型
 * 队列和它的优先级
-*
+* AM container规范(ContainerLaunchContext for AM)
+* AM非托管的Boolean标志符和container管理
+* application最大尝试数和资源请求  
+
+阅读更多关于ApplicatiionSubmissionContext类的细节，可以参考位于(http://hadoop.apache.org/docs/r2.5.2/api/org/apache/hadoop/yarn/api/records/ApplicationSubmissionContext.html)的Hadoop API文档。  
+
+#### ContainerLaunchContext
 
 
 ### 编写自己的YARN应用
