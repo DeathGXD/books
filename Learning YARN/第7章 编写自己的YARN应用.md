@@ -62,9 +62,13 @@ ApplicationSubmissionContext类包含下面的内容：
 ContainerLaunchContext是一个抽象类，包含了在一个节点上启动container所需要的所有信息。NodeManager进程使用launch context启动与application相关联的containers。ApplicationMaster是application的第一个container并且它的launch context被定义在ApplicationSubmissionContext类中。  
 
 ContainerLaunchContext对象包含下面的信息：
-* 在启动期间被使用的local resource
-*   
+* 在启动期间被使用的本地资源的映射
+* 定义的环境变量的映射
+* 被用来启动container的一组命令
+* 与关联的辅助服务和令牌有关的信息
+* Application ACLs(应用访问类型，查看和修改应用)  
 
+阅读更多关于ApplicatiionSubmissionContext类的细节，可以参考位于(http://hadoop.apache.org/docs/r2.5.2/api/org/apache/hadoop/yarn/api/records/ContainerLaunchContext.html)的Hadoop API文档。  
 
 #### 通信协议  
 
@@ -83,4 +87,61 @@ ContainerLaunchContext对象包含下面的信息：
 #### YARN client API
 
 
-### 编写自己的YARN应用
+### 编写自己的YARN应用  
+
+
+#### Step 1-创建一个新的项目并且添加Hadoop-YARN JAR文件  
+我们将会在用Eclipse创建一个新的Java项目，并且使用YARN client API写一个简单的YARN application。你要么创建一个简单的Java项目，要么创建一个Maven项目。  
+
+你需要添加下面的jar文件到你的项目的构建路径：
+* hadoop-yarn-client-2.5.1.jar
+* hadoop-yarn-api-2.5.1.jar
+* hadoop-yarn-common-2.5.1.jar
+* hadoop-common-2.5.1.jar  
+
+如果你选择创建一个简单的Java项目，你可以在你的项目中创建一个library文件夹(被叫做lib)去存储需要的jar文件，并且添加需要的jar文件到library文件夹。如果你选择创建一个Maven项目，那么你将需要在你的pom.xml文件中添加下面的依赖，并且安装项目去解析这些依赖：  
+```xml
+<dependency>
+  <groupId>org.apache.hadoop</groupId>
+  <artifactId>hadoop-yarn-client</artifactId>
+  <version>2.5.1</version>
+</dependency>
+<dependency>
+  <groupId>org.apache.hadoop</groupId>
+  <artifactId>hadoop-yarn-common</artifactId>
+  <version>2.5.1</version>
+</dependency>
+<dependency>
+  <groupId>org.apache.hadoop</groupId>
+  <artifactId>hadoop-yarn-api</artifactId>
+  <version>2.5.1</version>
+</dependency>
+<dependency>
+  <groupId>org.apache.hadoop</groupId>
+  <artifactId>hadoop-common</artifactId>
+  <version>2.5.1</version>
+</dependency>
+```
+
+#### Step 2-定义ApplicationMaster和client类  
+客户端需要定义类给ApplicationMaster管理应用的执行和YARN客户端提交应用到ResourceManager。  
+
+当编写ApplicationMaster和YARN客户端时，下面是client的规则：
+* 定义Application：
+    * 初始化AMRMClient和NMClient客户端
+    * 向ResourceManager注册尝试次数
+    * 定义ContainerRequest和增加containers请求
+    * 请求分配、定义ContainerLaunchContext并且启动containers
+    * 完成后，从ResourceManager移除ApplicationMaster的注册
+* 提交应用到ResourceManager
+    * 读取YARNConfiguration并且初始化YARNClient
+    * 连接到RM并且请求一个新的application id
+    * 为Application Master定义ContainerLaunchContext
+    * 创建ApplicationSubmissionContext
+    * 提交应用并且等待完成
+
+
+#### Step 3-导出项目并且复制资源配置  
+
+
+#### Step 4-使用bin运行application或者YARN命令
