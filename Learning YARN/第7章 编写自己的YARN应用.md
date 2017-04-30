@@ -138,10 +138,48 @@ ContainerLaunchContext对象包含下面的信息：
     * 连接到RM并且请求一个新的application id
     * 为Application Master定义ContainerLaunchContext
     * 创建ApplicationSubmissionContext
-    * 提交应用并且等待完成
+    * 提交应用并且等待完成  
+
+##### 定义一个ApplicationMaster  
+创建一个新的包并且创建一个新的带有main方法的ApplicationMaster.java类到你的项目中。你需要添加下面的代码片段到你ApplicationMaster.java类中。
+
+##### 定义一个YARN客户端
 
 
-#### Step 3-导出项目并且复制资源配置  
+#### Step 3-导出项目并且复制资源  
+你需要将Java项目导出为jar文件，并且将jar文件上传到HDFS上。如果你创建为Client.java和ApplicationMaster.java创建了两个不同的项目，那么你需要将两个项目都导出jar文件，并且将ApplicationMaster jar文件上传到HDFS上。在这个案例中，你仅仅只需要创建一个jar文件。为了复制文件到HDFS上，你可以使用Hadoop中的hdfs命令，要么使用put选项要么使用copyFromLocal选项。假如jar文件的名字是first-yarn-app.jar，那么hdfs命令应该像这样：  
+```shell
+bin/hdfs dfs -put first-yarn-app.jar /user/hduser/first-yarn-app.jar
+```  
 
+#### Step 4-使用bin运行application或者YARN命令  
+最后一步是使用Hadoop-bin文件价($HADOOP_PREFIX/bin)下的yarn命令提交应用到yarn上。  
 
-#### Step 4-使用bin运行application或者YARN命令
+正如前面所提及的Client.java类中的main方法，你需要传入三个参数：
+* shell命令
+* 需要的container数量
+* HDFS上包含ApplicationMaster类的jar文件路径  
+
+提交应用到YARN的命令看起来像下面一样：  
+```shell
+bin/yarn jar first-yarn-app.jar com.packt.firstyarnapp.Client /bin/true 1 hdfs://master:8020/user/hduser/first-yarn-app.jar
+```  
+前面应用的输出看起来像下面这样：  
+```xml
+Initializing YARN configuration
+15/07/05 23:52:51 INFO client.RMProxy: Connecting to ResourceManager
+at master/192.168.56.101:8032
+Requesting ResourceManager for a new Application
+Initializing ContainerLaunchContext for ApplicationMaster container
+Adding LocalResource
+Setting environment
+Setting resource capability
+Setting command to start ApplicationMaster service
+Initializing ApplicationSubmissionContext
+Submitting application application_1436101688138_0009
+15/07/05 23:52:53 INFO impl.YarnClientImpl: Submitted application
+application_1436101688138_0009
+Application completed successfully
+```  
+程序的输出将会展示在终端。你也可以在ResourceManager web UI上查看被提交应用的状态。就像下面截图所展示的一样：  
+![Image](/Images/ownyarnapp.png)
