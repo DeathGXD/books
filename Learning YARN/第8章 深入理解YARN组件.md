@@ -25,4 +25,8 @@ ResourceManager是YARN框架的核心组件, 负责管理一个多节点集群�
 
 
 
-### YARN调度负载模拟器
+### YARN调度负载模拟器  
+
+
+
+### YARN中的资源本地化
