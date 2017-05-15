@@ -26,9 +26,9 @@ ClientRMService类是ResourceManager的客户端接口。所有的客户端用�
 AdminService类被集群管理员用来管理ResourceManager服务。集群管理员在使用命令行选项rmadmin命令的时候，内部使用的就是AdminService。   
 
 下面列出了集群管理员通过AdminService可以执行的一些操作：  
-    * 刷新集群的节点、访问控制列表和队列  
-    * 检查集群的健康状态  
-    * 管理ResourceManager的高可用
+        * 刷新集群的节点、访问控制列表和队列  
+        * 检查集群的健康状态  
+        * 管理ResourceManager的高可用
 
 #### 核心接口
 
