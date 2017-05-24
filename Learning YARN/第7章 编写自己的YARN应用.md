@@ -57,7 +57,8 @@ Hadoop配置文件包含name/value属性作为XML数据。这些文件按它们�
    <name>yarn.resourcemanager.webapp.address</name>
    <value>${yarn.resourcemanager.hostname}:8088</value>
 </property>
-```  
+```  
+
 属性yarn.resourcemanager.webapp.address的值使用了yarn.resourcemanager.hostname的属性值。  
 
 提示：在YARN中普遍使用到的一个Java系统属性扩展变量是${user.name}。  
