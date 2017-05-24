@@ -1,5 +1,6 @@
-在第一章，我们讨论过了Hadoop 1.x框架的弊端。Hadoop 1.x仅仅局限于MapReduce编程。  
+在第一章，我们讨论过了Hadoop 1.x框架的弊端。Hadoop 1.x仅仅局限于MapReduce编程。你不得不为数据的处理逻辑编写map任何和reduce任务。随着对Hadoop 2.x版本中YARN的介绍，现在你可以在HDFS上的数据执行不同的数据处理算法。YARN将资源管理和数据处理框架分割成两个不同的组件：ResourceManager和ApplicationMaster。  
 
+在前几个章节中，我们已经学习到关于应用的执行流程，YARN组件之间如何进行通信和应用声明周期的管理。你在YARN集群上执行的一个MapReduce应用是与MRApplicationMaster组件一同工作的。在本章中，你将会学习到如何使用YARN Java APIs创建我们自己的YARN应用。学习本章知识要求你必须具备一定的Java背景和基本的Eclipse IDE知识。本章适合那些想要在YARN集群上创建并且执行应用的开发人员和开源软件贡献者。  
 
 在本章中，我们将涉及到下面的主题：  
 * 介绍YARN API
