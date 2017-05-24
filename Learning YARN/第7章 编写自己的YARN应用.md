@@ -190,10 +190,255 @@ YARN框架可以灵活的在集群环境中运行任何应用。应用可以像�
     * 提交应用并且等待完成  
 
 ##### 定义一个ApplicationMaster  
-创建一个新的包并且创建一个新的带有main方法的ApplicationMaster.java类到你的项目中。你需要添加下面的代码片段到你ApplicationMaster.java类中。
+创建一个新的包并且创建一个新的带有main方法的ApplicationMaster.java类到你的项目中。你需要添加下面的代码片段到你ApplicationMaster.java类：  
+```java
+package com.packt.firstyarnapp;
+
+import java.util.Collections;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.yarn.api.ApplicationConstants;
+import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
+import org.apache.hadoop.yarn.api.records.Container;
+import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
+import org.apache.hadoop.yarn.api.records.ContainerStatus;
+import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
+import org.apache.hadoop.yarn.api.records.Priority;
+import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.client.api.AMRMClient;
+import org.apache.hadoop.yarn.client.api.AMRMClient.ContainerRequest;
+import org.apache.hadoop.yarn.client.api.NMClient;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.util.Records;
+
+public class ApplicationMaster {
+   public static void main(String[] args) throws Exception {
+      System.out.println("Running ApplicationMaster");
+      final String shellCommand = args[0];
+      final int numOfContainers = Integer.valueOf(args[1]);
+      Configuration conf = new YarnConfiguration();
+      
+      // Point #2
+      System.out.println("Initializing AMRMCLient");
+      AMRMClient<ContainerRequest> rmClient = AMRMClient.createAMRMClient();
+      rmClient.init(conf);
+      rmClient.start();
+      System.out.println("Initializing NMCLient");
+      NMClient nmClient = NMClient.createNMClient();
+      nmClient.init(conf);
+      nmClient.start();
+      
+      // Point #3
+      System.out.println("Register ApplicationMaster");
+      rmClient.registerApplicationMaster(NetUtils.getHostname(), 0, "");
+      
+      // Point #4
+      Priority priority = Records.newRecord(Priority.class);
+      priority.setPriority(0);
+      System.out.println("Setting Resource capability for Containers");
+      Resource capability = Records.newRecord(Resource.class);
+      capability.setMemory(128);
+      capability.setVirtualCores(1);
+      for (int i = 0; i < numOfContainers; ++i) {
+         ContainerRequest containerRequested = new ContainerRequest(capability, null, null, priority, true);
+         // Resource, nodes, racks, priority and relax locality flag
+         rmClient.addContainerRequest(containerRequested);
+      }
+      
+      // Point #6
+      int allocatedContainers = 0;
+      System.out.println("Requesting container allocation from ResourceManager");
+      while (allocatedContainers < numOfContainers) {
+         AllocateResponse response = rmClient.allocate(0);
+         for (Container container : response.getAllocatedContainers()) {
+            ++allocatedContainers;
+            // Launch container by creating ContainerLaunchContext
+            ContainerLaunchContext ctx = Records.newRecord(ContainerLaunchContext.class);
+            ctx.setCommands(Collections.singletonList(shellCommand + " 1>"
+                           + ApplicationConstants.LOG_DIR_EXPANSION_VAR
+                           + "/stdout" + " 2>"
+                           + ApplicationConstants.LOG_DIR_EXPANSION_VAR
+                           + "/stderr"));
+            System.out.println("Starting container on node : " + container.getNodeHttpAddress());
+            nmClient.startContainer(container, ctx);
+         }
+         Thread.sleep(100);
+      }
+      
+      // Point #6
+      int completedContainers = 0;
+      while (completedContainers < numOfContainers) {
+         AllocateResponse response = rmClient.allocate(completedContainers / numOfContainers);
+         for (ContainerStatus status : response.getCompletedContainersStatuses()) {
+            ++completedContainers;
+            System.out.println("Container completed : " + status.getContainerId());
+            System.out.println("Completed container " + completedContainers);
+         }
+         Thread.sleep(100);
+      }
+      rmClient.unregisterApplicationMaster(FinalApplicationStatus.SUCCEEDED,"", "");
+   }
+}
+```  
+ApplicationMaster的代码片段的解释如下：  
+1. 读取YARN的配置和输入参数：ApplicationMaster使用YARNConfiguration类去加载Hadoop-YARN配置文件并且读取指定的输入参数。在这个例子中，第一个参数是shellCommand，比如/bin/date；第二个参数是numofContainers在application执行期间被执行：
+```java
+Public static void main(String[] args) throws Exception {
+   final String shellCommand = args[0];
+   final intnumOfContainers = Integer.valueOf(args[1]);
+   Configuration conf = new YarnConfiguration();
+}
+```
+2. 初始化AMRMClient和NMClient客户端：ApplicationMaster首先会创建并且初始化与ResourceManager进行通信的接口AMRMClient和与NodeManager进行通信的接口NMClient，代码如下：
+```java
+AMRMClient<ContainerRequest> rmClient = AMRMClient.createAMRMClient();
+rmClient.init(conf);
+rmClient.start();
+NMClient nmClient = NMClient.createNMClient();
+nmClient.init(conf);
+nmClient.start();
+```  
+3. 向ResourceManager注册attempt：ApplicationMaster向ResourceManager进行注册。它需要为attempt指定主机名，端口和一个URL。在注册成功后，ResourceManager会将application的状态更新为RUNNING。  
+```java
+rmClient.registerApplicationMaster(NetUtils.getHostname(), 0,"");
+```
+4. 定义ContainerRequest并且增加container的请求：
 
 ##### 定义一个YARN客户端
+创建一个新的带有main方法的类Client.java到你的项目中。为了简单起见，你可以在相同的项目中创建它。  
 
+Client.java文件中的代码如下：  
+```java
+package com.packt.firstyarnapp;
+
+import java.io.File;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.api.ApplicationConstants;
+import org.apache.hadoop.yarn.api.ApplicationConstants.Environment;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
+import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
+import org.apache.hadoop.yarn.api.records.LocalResource;
+import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
+import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.yarn.client.api.YarnClientApplication;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.util.Apps;
+import org.apache.hadoop.yarn.util.ConverterUtils;
+import org.apache.hadoop.yarn.util.Records;
+
+public class Client {
+   public static void main(String[] args) throws Exception {
+      try {
+         Client clientObj = new Client();
+         if (clientObj.run(args)) {
+            System.out.println("Application completed
+            successfully");
+         } else {
+            System.out.println("Application Failed / Killed");
+         }
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+      }
+      
+      public boolean run(String[] args) throws Exception {
+         // Point #1
+         final String command = args[0];
+         final int n = Integer.valueOf(args[1]);
+         final Path jarPath = new Path(args[2]);
+         System.out.println("Initializing YARN configuration");
+         YarnConfiguration conf = new YarnConfiguration();
+         YarnClient yarnClient = YarnClient.createYarnClient();
+         yarnClient.init(conf);
+         yarnClient.start();
+         
+         // Point #2
+         System.out.println("Requesting ResourceManager for a new
+         Application");
+         YarnClientApplication app =
+         yarnClient.createApplication();
+         
+         // Point #3
+         System.out.println("Initializing ContainerLaunchContext
+         for ApplicationMaster container");
+         ContainerLaunchContext amContainer = Records.newRecord(ContainerLaunchContext.class);
+         System.out.println("Adding LocalResource");
+         LocalResource appMasterJar =
+         Records.newRecord(LocalResource.class);
+         FileStatus jarStat = FileSystem.get(conf).getFileStatus(jarPath);
+         appMasterJar.setResource(ConverterUtils.getYarnUrlFromPath(jarPath));
+         appMasterJar.setSize(jarStat.getLen());
+         appMasterJar.setTimestamp(jarStat.getModificationTime());
+         appMasterJar.setType(LocalResourceType.FILE);
+         appMasterJar.setVisibility(LocalResourceVisibility.PUBLIC);
+         
+         // Point #4
+         System.out.println("Setting environment");
+         Map<String, String> appMasterEnv = new HashMap<String, String>();
+         for (String c : conf.getStrings(YarnConfiguration.YARN_APPLICATION_CLASSPATH,
+                                    YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH))
+         {
+            Apps.addToEnvironment(appMasterEnv,
+            Environment.CLASSPATH.name(),
+            c.trim());
+         }
+         Apps.addToEnvironment(appMasterEnv,
+         Environment.CLASSPATH.name(),
+         Environment.PWD.$() + File.separator + "*");
+         System.out.println("Setting resource capability");
+         Resource capability = Records.newRecord(Resource.class);
+         capability.setMemory(256);
+         capability.setVirtualCores(1);
+         System.out.println("Setting command to start
+         ApplicationMaster service");
+         amContainer.setCommands(Collections.singletonList("/usr/lib/jvm/jdk1.8.0/bin/java"
+         + " -Xmx256M" + "com.packt.firstyarnapp.ApplicationMaster"
+         + " " + command + " " + String.valueOf(n) + " 1>"
+         + ApplicationConstants.LOG_DIR_EXPANSION_VAR +
+         "/stdout"
+         + " 2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR
+         + "/stderr"));
+         amContainer.setLocalResources(Collections.singletonMap("first-yarn-app.jar", appMasterJar));
+         amContainer.setEnvironment(appMasterEnv);
+         System.out.println("Initializing ApplicationSubmissionContext");
+         ApplicationSubmissionContext appContext = app.getApplicationSubmissionContext();
+         appContext.setApplicationName("first-yarn-app");
+         appContext.setApplicationType("YARN");
+         appContext.setAMContainerSpec(amContainer);
+         appContext.setResource(capability);
+         appContext.setQueue("default");
+         ApplicationId appId = appContext.getApplicationId();
+         System.out.println("Submitting application " + appId);
+         yarnClient.submitApplication(appContext);
+         ApplicationReport appReport = yarnClient.getApplicationReport(appId);
+         YarnApplicationState appState = appReport.getYarnApplicationState();
+         while (appState != YarnApplicationState.FINISHED
+               && appState != YarnApplicationState.KILLED
+               && appState != YarnApplicationState.FAILED) {
+            Thread.sleep(100);
+            appReport = yarnClient.getApplicationReport(appId);
+            appState = appReport.getYarnApplicationState();
+         }
+         if (appState == YarnApplicationState.FINISHED) {
+            return true;
+         } else {
+            return false;
+      }
+   }
+}
+```
 
 #### Step 3-导出项目并且复制资源  
 你需要将Java项目导出为jar文件，并且将jar文件上传到HDFS上。如果你创建为Client.java和ApplicationMaster.java创建了两个不同的项目，那么你需要将两个项目都导出jar文件，并且将ApplicationMaster jar文件上传到HDFS上。在这个案例中，你仅仅只需要创建一个jar文件。为了复制文件到HDFS上，你可以使用Hadoop中的hdfs命令，要么使用put选项要么使用copyFromLocal选项。假如jar文件的名字是first-yarn-app.jar，那么hdfs命令应该像这样：  
