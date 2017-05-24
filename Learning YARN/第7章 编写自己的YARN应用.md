@@ -91,7 +91,8 @@ ContainerLaunchContext对象包含下面的信息：
 阅读更多关于ApplicatiionSubmissionContext类的细节，可以参考位于(http://hadoop.apache.org/docs/r2.5.2/api/org/apache/hadoop/yarn/api/records/ContainerLaunchContext.html)的Hadoop API文档。  
 
 #### 通信协议  
-YARN API包含4种通信协议用来与YARN客户端进行交互和ApplicationMaster与YARN服务进行交互，比如：ResourceManager、NodeManager和Timeline Server。这些协议都被定义在org.apache.hadoop.yarn.api包中。本节给这些接口和它们的用法一个简答的介绍：
+YARN API包含4种通信协议用来与YARN客户端进行交互和ApplicationMaster与YARN服务进行交互，比如：ResourceManager、NodeManager和Timeline Server。这些协议都被定义在org.apache.hadoop.yarn.api包中。本节给这些接口和它们的用法一个简答的介绍：  
+![image](/Images/yarn-communication-protocol.PNG)  
 
 ##### ApplicationClientProtocol  
 
