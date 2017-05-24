@@ -125,10 +125,19 @@ YARN客户端API请参考定义在org.apache.hadoop.yarn.api包中的类。这�
 
 下面是一些在客户端API中的类：  
 * YarnClient：这个类是客户端与ResourceManager之间通信的桥梁。客户端可以通过这个类提交应用，请求应用的状态/记录和获取集群metrics。
-* AMRMClient/AMRMClientAsync：
+* AMRMClient/AMRMClientAsync：这些有助于阻塞式AMRMClient和非阻塞式AMRMClientAsync在ApplicationMaster与ResourceManager之间的进行通信。正如第5章，理解YARN的生命周期中提到的，ApplicationMaster使用AMRMClient与ResourceManager服务进行连接。ApplicationMaster使用AMRMClient去注册AM服务，从ResourceManager那里请求资源，获取集群可用的资源。
+* NMClient/NMClientAsync：这些有助于阻塞式AMRMClient和非阻塞式AMRMClientAsync在ApplicationMaster与NodeManager之间的进行通信。类似于与ResourceManager连接，ApplicationMaster创建一个连接到分配了container的NodeManager。ApplicationMaster使用NMClient去请求启动/停止containers和获得container的状态。
+* AHSClient/TimelineClient：这个有助于客户端与Timeline服务之间的通信。一旦applications完成，客户端可以从Timeline服务中获取application的记录。客户端使用AHSClient去获取已经完成的application的列表，attempts和containers。  
 
-### 编写自己的YARN应用  
+想要阅读更多有关YARN客户端API，你可以参考Hadoop API文档http://hadoop.apache.org/docs/r2.5.1/api/org/apache/hadoop/yarn/api/package-summary.html  
 
+### 编写自己的YARN应用  
+YARN框架可以灵活的在集群环境中运行任何应用。应用可以像一个Java进程，一个shell脚本或者一个简单的date命令一样简单。ResourceManager管理着集群资源的分配，NodeManager通过特定的应用框架执行任务；比如Hadoop MapReduce任务是map任务和reduce任务。  
+
+在本节中，你将会编写你自己的通过YARN运行在分布式环境中的应用。  
+
+完整的程序可以概括为4个步骤，就如下面图中所示：  
+![image](/Images/4step-create-yarn-app.PNG)
 
 #### Step 1-创建一个新的项目并且添加Hadoop-YARN JAR文件  
 我们将会在用Eclipse创建一个新的Java项目，并且使用YARN client API写一个简单的YARN application。你要么创建一个简单的Java项目，要么创建一个Maven项目。  
