@@ -280,7 +280,7 @@ public class ApplicationMaster {
       rmClient.unregisterApplicationMaster(FinalApplicationStatus.SUCCEEDED,"", "");
    }
 }
-```  
+```  
 ApplicationMaster的代码片段的解释如下：  
 1. 读取YARN的配置和输入参数：ApplicationMaster使用YARNConfiguration类去加载Hadoop-YARN配置文件并且读取指定的输入参数。在这个例子中，第一个参数是shellCommand，比如/bin/date；第二个参数是numofContainers在application执行期间被执行：
 ```java
@@ -289,7 +289,7 @@ Public static void main(String[] args) throws Exception {
    final intnumOfContainers = Integer.valueOf(args[1]);
    Configuration conf = new YarnConfiguration();
 }
-```
+```  
 2. 初始化AMRMClient和NMClient客户端：ApplicationMaster首先会创建并且初始化与ResourceManager进行通信的接口AMRMClient和与NodeManager进行通信的接口NMClient，代码如下：
 ```java
 AMRMClient<ContainerRequest> rmClient = AMRMClient.createAMRMClient();
