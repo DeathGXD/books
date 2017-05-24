@@ -137,7 +137,7 @@ YARN框架可以灵活的在集群环境中运行任何应用。应用可以像�
 在本节中，你将会编写你自己的通过YARN运行在分布式环境中的应用。  
 
 完整的程序可以概括为4个步骤，就如下面图中所示：  
-![image](/Images/step-create-yarn-app.PNG)
+![image](/Images/create-yarn-app-step.PNG)
 
 #### Step 1-创建一个新的项目并且添加Hadoop-YARN JAR文件  
 我们将会在用Eclipse创建一个新的Java项目，并且使用YARN client API写一个简单的YARN application。你要么创建一个简单的Java项目，要么创建一个Maven项目。  
