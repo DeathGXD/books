@@ -4,12 +4,14 @@
 
 在本章中，我们将涉及到下面的主题：  
 * 介绍YARN API
-* 核心的概念和有关的类
+* 核心的概念和相关  的类
 * 编写自己的YARN应用
 * 在Hadoop-YARN集群上执行应用  
 
 ### YARN API介绍  
-YARN是一个与Hadoop捆绑打包在一起的Java框架。它提供资源管理，  
+YARN是一个与Hadoop捆绑打包在一起的Java框架。它提供资源管理，以及简单的与存储在HDFS上的数据进行数据处理算法和访问算法的整合。Apache Storm、Giraph和HAMA是几个使用YARN进行资源管理的数据处理框架。详细的与YARN进行整合的技术在第12章，使用YARN进行实时数据分析中介绍。  
+
+Hadoop-YARN API被定义在org.apache.hadoop.yarn.api包中。当编写你自己的YARN应用时，你将会使用到YARN API中的一些类。在继续之前，列举一些被使用到的类和明白它们的角色是至关重要。本节将会涉及到一些重要的定义在org.apache.hadoop.yarn.api包中的类。  
 
 #### YARNConfiguration  
 YARNConfiguration类定义在org.apache.hadoop.yarn.conf包中，它继承自org.apache.hadoop.conf.Configuration类。与Configuration类相似，它读取YARN配置文件(yarn-default.xml和yarn-site.xml)和提供访问Hadoop-YARNHadoop-YARN配置参数的入口。下面都是由YARNConfiguration类进行负责：  
@@ -44,11 +46,27 @@ Hadoop配置文件包含name/value属性作为XML数据。这些文件按它们�
 </property>
 ```  
 
-##### 变量扩展  
+##### 扩展变量 
+一个属性值可能包含其他定义在配置文件中的属性或者Java进程属性需要的值。可以参考下面resourcemanager主机名的例子：
+```xml
+<property>
+   <name>yarn.resourcemanager.hostname</name>
+   <value>masternode</value>
+</property>
+<property>
+   <name>yarn.resourcemanager.webapp.address</name>
+   <value>${yarn.resourcemanager.hostname}:8088</value>
+</property>
+```  
+属性yarn.resourcemanager.webapp.address的值使用了yarn.resourcemanager.hostname的属性值。  
 
+提示：在YARN中普遍使用到的一个Java系统属性扩展变量是${user.name}。  
 
-#### ApplicationSubmissionContext  
-ApplicationSubmissionContext是一个抽象类，包含了给一个application运行ApplicationMaster所需要的所有信息。客户端定义了submission context，包含了应用的属性，运行ApplicationMaster服务的命令和资源请求的列表，等等。在应用提交请求期间，客户端会发送这个context到ResourceManager。ResourceManager使用这个context保存应用的状态并且在一个NodeManager节点上运行ApplicationMaster进程。  
+想要阅读更多有关YARNConfiguration类的内容，你可以参考Hadoop API文档 http://hadoop.apache.org/docs/r2.5.1/api/org/apache/
+hadoop/yarn/conf/YarnConfiguration.html。  
+
+#### ApplicationSubmissionContext  
+ApplicationSubmissionContext是一个抽象类，包含了给一个application运行ApplicationMaster所需要的所有信息。客户端定义了submission context，包含了应用的属性，运行ApplicationMaster服务的命令和资源请求的列表，等等。在应用提交请求期间，客户端会发送这个context到ResourceManager。ResourceManager使用这个context保存应用的状态并且在一个NodeManager节点上运行ApplicationMaster进程。  
 
 ApplicationSubmissionContext类包含下面的内容：
 * 应用ID、名字和类型
@@ -71,8 +89,8 @@ ContainerLaunchContext对象包含下面的信息：
 
 阅读更多关于ApplicatiionSubmissionContext类的细节，可以参考位于(http://hadoop.apache.org/docs/r2.5.2/api/org/apache/hadoop/yarn/api/records/ContainerLaunchContext.html)的Hadoop API文档。  
 
-#### 通信协议  
-
+#### 通信协议  
+YARN API包含4种通信协议用来与YARN客户端进行交互和ApplicationMaster与YARN服务进行交互，比如：ResourceManager、NodeManager和Timeline Server。这些协议都被定义在org.apache.hadoop.yarn.api包中。本节给这些接口和它们的用法一个简答的介绍：
 
 ##### ApplicationClientProtocol  
 
