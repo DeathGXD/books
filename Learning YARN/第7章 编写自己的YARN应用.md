@@ -303,7 +303,12 @@ nmClient.start();
 ```java
 rmClient.registerApplicationMaster(NetUtils.getHostname(), 0,"");
 ```
-4. 定义ContainerRequest并且增加container的请求：
+4. 定义ContainerRequest并且增加container的请求：  
+
+5. 请求分配、定义ContainerLaunchContext和启动containers：ApplicationMaster请求ResourceManager分配请求的containers并且通知ResourceManager关于当前application的进展。  
+
+
+6. 完成后，从ResourceManager注销ApplicationMaster：
 
 ##### 定义一个YARN客户端
 创建一个新的带有main方法的类Client.java到你的项目中。为了简单起见，你可以在相同的项目中创建它。  
@@ -438,7 +443,9 @@ public class Client {
       }
    }
 }
-```
+```  
+你需要添加给定的代码片段到Client.java类的下面的run()方法中：  
+1. 读取YARNConfiguration和初始化YARNClient：
 
 #### Step 3-导出项目并且复制资源  
 你需要将Java项目导出为jar文件，并且将jar文件上传到HDFS上。如果你创建为Client.java和ApplicationMaster.java创建了两个不同的项目，那么你需要将两个项目都导出jar文件，并且将ApplicationMaster jar文件上传到HDFS上。在这个案例中，你仅仅只需要创建一个jar文件。为了复制文件到HDFS上，你可以使用Hadoop中的hdfs命令，要么使用put选项要么使用copyFromLocal选项。假如jar文件的名字是first-yarn-app.jar，那么hdfs命令应该像这样：  
