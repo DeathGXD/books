@@ -94,19 +94,38 @@ ContainerLaunchContext对象包含下面的信息：
 YARN API包含4种通信协议用来与YARN客户端进行交互和ApplicationMaster与YARN服务进行交互，比如：ResourceManager、NodeManager和Timeline Server。这些协议都被定义在org.apache.hadoop.yarn.api包中。本节给这些接口和它们的用法一个简答的介绍：  
 ![image](/Images/yarn-communication-protocol.PNG)  
 
-##### ApplicationClientProtocol  
+##### ApplicationClientProtocol  
+ApplicationClientProtocol接口定义客户端与ResourceManager服务之间的通信协议。  
 
+客户端使用这个接口：  
+* 创建/提交/杀死应用
+* 获取应用/container/应用attempts的记录
+* 获取集群的度量/节点/队列信息
+* 使用过滤器获取应用和节点列表(GetApplicationRequest和GetClusterNodesRequest)
+* 请求一个新的授权令牌或者更新已经存在  
 
-##### ApplicationMasterProcotol  
+##### ApplicationMasterProcotol  
+ApplicationMasterProtocol接口被活跃的ApplicationMaster实例用来与ResourceManager服务进行通信。一旦ApplicationMaster启动之后，它就会向ResourceManager进行注册。ApplicationMaster实例发送AllocateRequest给ResourceManager去请求新的containers和释放不用的或者被列入黑名单的containers。在应用执行完成后，ApplicationMaster会使用finishApplicationMaster()方法给ResourceManager发送一个通知。  
 
+##### ContainerManagementProcotol  
+ContainerManagementProtocol接口被用作活跃的ApplicationMaster和NodeManager服务之间的通信协议。ResourceManager给ApplicationMaster实例分配containers，然后ApplicationMaster提交启动container请求给相应的NodeManager。  
 
-##### ContainerManagementProcotol  
+一个活跃的ApplicationMaster使用这个接口去：  
+* 请求NodeManager使用ContainerLaunchContext启动所有container
+* 获取当前containers的状态
+* 停止对应ID的container  
 
-##### ApplicationHistoryProcotol  
+##### ApplicationHistoryProcotol  
+ApplicationHistoryProtocol是从Hadoop 2.5开始新增加的协议。该协议被客户端用来与application history服务(Timeline服务)进行通信，以获取相关完成的applications的信息。Timeline服务保留着提交到YARN集群上的applications信息的历史数据。客户端可以使用这个接口获取已经完成的applications、containers和application attempts的记录。  
 
+想要阅读更多可用的通信协议信息，你可以参考Hadoop API文档http://hadoop.apache.org/docs/r2.5.1/api/org/apache/hadoop/yarn/api/package-summary.html  
 
-#### YARN client API
+#### YARN客户端API
+YARN客户端API请参考定义在org.apache.hadoop.yarn.api包中的类。这些类使用早前提到的协议，当编写基于Java的YARN应用时被使用。这些是暴露给客户端/ApplicationMaster服务与YARN进程进行通信的类。  
 
+下面是一些在客户端API中的类：  
+* YarnClient：这个类是客户端与ResourceManager之间通信的桥梁。客户端可以通过这个类提交应用，请求应用的状态/记录和获取集群metrics。
+* AMRMClient/AMRMClientAsync：
 
 ### 编写自己的YARN应用  
 
