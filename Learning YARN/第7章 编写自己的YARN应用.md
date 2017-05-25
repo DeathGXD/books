@@ -503,8 +503,8 @@ public Boolean run(String[] args) throws Exception {
 ```java
 YarnClientApplication app = yarnClient.createApplication();
 ```  
-3. **为ApplicationMaster定义ContainerLaunchContext**：一个application中的第一个container是作为ApplicationMaster的container。客户端会定义一个包含启动ApplicationMaster服务的ContainerLaunchContext。其中ContainerLaunchContext会包含下面的信息：
-    * **为ApplicationMaster设置jar文件**：NodeManager应该能够找到jar文件。其中jar文件是位于HDFS上并且被NodeManager作为一个LocalResource访问，代码如下：  
+3. **为ApplicationMaster定义ContainerLaunchContext**：一个application中的第一个container是作为ApplicationMaster的container。客户端会定义一个包含启动ApplicationMaster服务的ContainerLaunchContext。其中ContainerLaunchContext会包含下面的信息：  
+    * **为ApplicationMaster设置jar文件**：NodeManager应该能够找到jar文件。其中jar文件是位于HDFS上并且被NodeManager作为一个LocalResource访问，代码如下：  
     ```java
       ContainerLaunchContextamContainer = Records.newRecord(ContainerLaunchContext.class);
       LocalResourceappMasterJar = Records.newRecord(LocalResource.class);
@@ -610,6 +610,6 @@ Application completed successfully
 ### 总结
 编写自己的Hadoop-YARN应用允许用户在分布式环境中实现自己的业务逻辑(不同于MapReduce编程)。本章涉及了YARN APIs的基本知识并且通过编写一个简单的YARN应用和你一起走过了这一章。想要阅读更多关于这一主题的内容，你可以参考Hadoop文档http://hadoop.apache.org/docs/r2.5.1/hadoop-yarn/hadoop-yarn-site/WritingYarnApplications.html。  
 
-Hadoop文档粗略的涉及到编写YARN应用时用到的所有YARN API。你也可以参考Hortonworks在GitHub上的一个例子 https://github.com/apache/hadoop-common/tree/trunk/hadoop-yarnproject/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applicationsdistributedshell。你可以编译并且在Hadoop-YARN集群上运行它。  
+Hadoop文档粗略的涉及到编写YARN应用时用到的所有YARN API。你也可以参考Hortonworks在GitHub上的一个例子 https://github.com/apache/hadoop-common/tree/trunk/hadoop-yarnproject/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applicationsdistributedshell。 你可以编译并且在Hadoop-YARN集群上运行它。
 
 下一章涉及到YARN内部细节和YARN组件的核心服务。它有助于Java开发者和开源代码贡献者更好的理解YARN组件之间的通信和更深入的学习YARN的架构。
