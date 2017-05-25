@@ -63,8 +63,8 @@ Hadoop配置文件包含name/value属性作为XML数据。这些文件按它们�
 
 提示：在YARN中普遍使用到的一个Java系统属性扩展变量是${user.name}。  
 
-想要阅读更多有关YARNConfiguration类的内容，你可以参考Hadoop API文档 http://hadoop.apache.org/docs/r2.5.1/api/org/apache/
-hadoop/yarn/conf/YarnConfiguration.html。  
+想要阅读更多有关YARNConfiguration类的内容，你可以参考Hadoop API文档[API](http://hadoop.apache.org/docs/r2.5.1/api/org/apache/
+hadoop/yarn/conf/YarnConfiguration.html)。  
 
 #### ApplicationSubmissionContext  
 ApplicationSubmissionContext是一个抽象类，包含了给一个application运行ApplicationMaster所需要的所有信息。客户端定义了submission context，包含了应用的属性，运行ApplicationMaster服务的命令和资源请求的列表，等等。在应用提交请求期间，客户端会发送这个context到ResourceManager。ResourceManager使用这个context保存应用的状态并且在一个NodeManager节点上运行ApplicationMaster进程。  
