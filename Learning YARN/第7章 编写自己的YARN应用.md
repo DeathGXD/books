@@ -124,10 +124,10 @@ ApplicationHistoryProtocol是从Hadoop 2.5开始新增加的协议。该协议�
 YARN客户端API请参考定义在org.apache.hadoop.yarn.api包中的类。这些类使用早前提到的协议，当编写基于Java的YARN应用时被使用。这些是暴露给客户端/ApplicationMaster服务与YARN进程进行通信的类。  
 
 下面是一些在客户端API中的类：  
-* YarnClient：这个类是客户端与ResourceManager之间通信的桥梁。客户端可以通过这个类提交应用，请求应用的状态/记录和获取集群metrics。
-* AMRMClient/AMRMClientAsync：这些有助于阻塞式AMRMClient和非阻塞式AMRMClientAsync在ApplicationMaster与ResourceManager之间的进行通信。正如第5章，理解YARN的生命周期中提到的，ApplicationMaster使用AMRMClient与ResourceManager服务进行连接。ApplicationMaster使用AMRMClient去注册AM服务，从ResourceManager那里请求资源，获取集群可用的资源。
-* NMClient/NMClientAsync：这些有助于阻塞式AMRMClient和非阻塞式AMRMClientAsync在ApplicationMaster与NodeManager之间的进行通信。类似于与ResourceManager连接，ApplicationMaster创建一个连接到分配了container的NodeManager。ApplicationMaster使用NMClient去请求启动/停止containers和获得container的状态。
-* AHSClient/TimelineClient：这个有助于客户端与Timeline服务之间的通信。一旦applications完成，客户端可以从Timeline服务中获取application的记录。客户端使用AHSClient去获取已经完成的application的列表，attempts和containers。  
+* **YarnClient**：这个类是客户端与ResourceManager之间通信的桥梁。客户端可以通过这个类提交应用，请求应用的状态/记录和获取集群metrics。
+* **AMRMClient/AMRMClientAsync**：这些有助于阻塞式AMRMClient和非阻塞式AMRMClientAsync在ApplicationMaster与ResourceManager之间的进行通信。正如第5章，理解YARN的生命周期中提到的，ApplicationMaster使用AMRMClient与ResourceManager服务进行连接。ApplicationMaster使用AMRMClient去注册AM服务，从ResourceManager那里请求资源，获取集群可用的资源。
+* **NMClient/NMClientAsync**：这些有助于阻塞式AMRMClient和非阻塞式AMRMClientAsync在ApplicationMaster与NodeManager之间的进行通信。类似于与ResourceManager连接，ApplicationMaster创建一个连接到分配了container的NodeManager。ApplicationMaster使用NMClient去请求启动/停止containers和获得container的状态。
+* **AHSClient/TimelineClient**：这个有助于客户端与Timeline服务之间的通信。一旦applications完成，客户端可以从Timeline服务中获取application的记录。客户端使用AHSClient去获取已经完成的application的列表，attempts和containers。  
 
 想要阅读更多有关YARN客户端API，你可以参考Hadoop API文档http://hadoop.apache.org/docs/r2.5.1/api/org/apache/hadoop/yarn/api/package-summary.html  
 
@@ -282,7 +282,7 @@ public class ApplicationMaster {
 }
 ```  
 ApplicationMaster的代码片段的解释如下：  
-1. 读取YARN的配置和输入参数：ApplicationMaster使用YARNConfiguration类去加载Hadoop-YARN配置文件并且读取指定的输入参数。在这个例子中，第一个参数是shellCommand，比如/bin/date；第二个参数是numofContainers在application执行期间被执行：
+1. **读取YARN的配置和输入参数**：ApplicationMaster使用YARNConfiguration类去加载Hadoop-YARN配置文件并且读取指定的输入参数。在这个例子中，第一个参数是shellCommand，比如/bin/date；第二个参数是numofContainers在application执行期间被执行：
 ```java
 Public static void main(String[] args) throws Exception {
    final String shellCommand = args[0];
@@ -290,7 +290,7 @@ Public static void main(String[] args) throws Exception {
    Configuration conf = new YarnConfiguration();
 }
 ```  
-2. 初始化AMRMClient和NMClient客户端：ApplicationMaster首先会创建并且初始化与ResourceManager进行通信的接口AMRMClient和与NodeManager进行通信的接口NMClient，代码如下：
+2. **初始化AMRMClient和NMClient客户端**：ApplicationMaster首先会创建并且初始化与ResourceManager进行通信的接口AMRMClient和与NodeManager进行通信的接口NMClient，代码如下：
 ```java
 AMRMClient<ContainerRequest> rmClient = AMRMClient.createAMRMClient();
 rmClient.init(conf);
@@ -299,17 +299,58 @@ NMClient nmClient = NMClient.createNMClient();
 nmClient.init(conf);
 nmClient.start();
 ```  
-3. 向ResourceManager注册attempt：ApplicationMaster向ResourceManager进行注册。它需要为attempt指定主机名，端口和一个URL。在注册成功后，ResourceManager会将application的状态更新为RUNNING。  
+3. **向ResourceManager注册attempt**：ApplicationMaster向ResourceManager进行注册。它需要为attempt指定主机名，端口和一个URL。在注册成功后，ResourceManager会将application的状态更新为RUNNING。  
 ```java
 rmClient.registerApplicationMaster(NetUtils.getHostname(), 0,"");
 ```
-4. 定义ContainerRequest并且增加container的请求：  
+4. **定义ContainerRequest并且添加container的请求**：客户端定义工作的containers在内存和cores方面的需求条件(org.apache.hadoop.yarn.api.records.Resource)。客户端可能也会指定containers的优先级，一个优先的节点列表和资源所在地的机架。客户端创建一个ContainerContext的引用并且在调用allocate()方法前添加请求：  
+```java
+Priority priority = Records.newRecord(Priority.class);
+priority.setPriority(0);
 
-5. 请求分配、定义ContainerLaunchContext和启动containers：ApplicationMaster请求ResourceManager分配请求的containers并且通知ResourceManager关于当前application的进展。  
-
-
-6. 完成后，从ResourceManager注销ApplicationMaster：
-
+Resource capability = Records.newRecord(Resource.class);
+capability.setMemory(128);
+capability.setVirtualCores(1);
+for (inti = 0; i<numOfContainers; ++i) {
+   ContainerRequest containerRequested = new
+   ContainerRequest(capability, null, null, priority, true);
+   // Resource, nodes, racks, priority and relax locality flag
+   rmClient.addContainerRequest(containerRequested);
+}
+```  
+5. **请求分配、定义ContainerLaunchContext和启动containers**：ApplicationMaster请求ResourceManager分配请求的containers并且通知ResourceManager关于当前application的进展。因此，进度指示器在第一次分配期间的值为0。来自ResourceManager的响应中包含分配的containers的数量。ApplicationMaster为每个分配container创建一个ContainerLaunchContext并且请求响应的NodeManager启动container。ApplicationMaster将会等待containers的执行。在这个例子中，运行containers的命令作为ApplicationMaster的第一个参数(/bin/date命令)：  
+```java
+intallocatedContainers = 0;
+while (allocatedContainers<numOfContainers) {
+AllocateResponse response = rmClient.allocate(0);
+for (Container container : response.getAllocatedContainers()) {
+   ++allocatedContainers;
+   // Launch container by creating ContainerLaunchContext
+   ContainerLaunchContext ctx = Records.newRecord(ContainerLaunchContext.class);
+   ctx.setCommands(Collections.singletonList(shellCommand +
+   " 1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout"
+   +
+   " 2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr"
+   ));
+   nmClient.startContainer(container, ctx);
+   }
+   Thread.sleep(100);
+}
+```
+6. **完成后，从ResourceManager注销ApplicationMaster**：分配响应同样也包含已完成的containers的列表。一旦在响应中获得的所有containers开始在不同的NodeManager上开始执行，ApplicationMaster将会等待它们的完成。ContainerStatus类提供了执行中的container的当前状态。为了注销ApplicationMaster，需要在AMRMClient引用中调用unregisterApplicationMaster()方法。随着注销方法的调用，ApplicationMaster会将application的最终状态，application的消息和application的URL作为参数进行发送：  
+```java
+intcompletedContainers = 0;
+while (completedContainers<numOfContainers) {
+   AllocateResponse response = rmClient.allocate(completedContainers/numOfContainers);
+   for (ContainerStatus status : response.getCompletedContainersStatuses()) {
+      ++completedContainers;
+      System.out.println("Completed container " +
+      completedContainers);
+   }
+   Thread.sleep(100);
+}
+rmClient.unregisterApplicationMaster(FinalApplicationStatus.SUCCEEDED, "", "");
+```  
 ##### 定义一个YARN客户端
 创建一个新的带有main方法的类Client.java到你的项目中。为了简单起见，你可以在相同的项目中创建它。  
 
@@ -444,10 +485,88 @@ public class Client {
    }
 }
 ```  
-你需要添加给定的代码片段到Client.java类的下面的run()方法中：  
-1. 读取YARNConfiguration和初始化YARNClient：
-
-#### Step 3-导出项目并且复制资源  
+你需要添加给定的代码片段到Client.java类的run()方法中：  
+1. **读取YARNConfiguration和初始化YARNClient**：类似于ApplicationMaster，客户端同样使用YARNConfiguration类去加载Hadoop-YARN的配置文件和读取指定的输入参数。客户端在客户端节点启动一个YARNClient服务。  在本例中，前两个参数是直接传给ApplicationMaster中的ContainerLaunchContext的，第三个参数是位于HDFS的路径用来给job执行的数据(带有ApplicationMaster的jar文件)：  
+```java
+public Boolean run(String[] args) throws Exception {
+   final String command = args[0];
+   final int n = Integer.valueOf(args[1]);
+   final Path jarPath = new Path(args[2]);
+   YarnConfigurationconf = new YarnConfiguration();
+   YarnClientyarnClient=YarnClient.createYarnClient();
+   yarnClient.init(conf);
+   yarnClient.start();
+}
+```  
+2. **连接到ResourceManager并且请求一个新的application ID**：客户端连接到ResourceManager服务请求一个新的application。请求的响应(YarnClientApplication-GetNewApplicationResponse)中包含一个新的application ID和集群中最小和最大的资源容量。  
+```java
+YarnClientApplication app = yarnClient.createApplication();
+```  
+3. **为ApplicationMaster定义ContainerLaunchContext**：一个application中的第一个container是作为ApplicationMaster的container。客户端会定义一个包含启动ApplicationMaster服务的ContainerLaunchContext。其中ContainerLaunchContext会包含下面的信息：  
+    * 为ApplicationMaster设置jar文件：NodeManager应该能够找到jar文件。其中jar文件是位于HDFS上并且被NodeManager作为一个LocalResource访问，代码如下：  
+    ```java
+      ContainerLaunchContextamContainer = Records.newRecord(ContainerLaunchContext.class);
+      LocalResourceappMasterJar = Records.newRecord(LocalResource.class);
+      FileStatusjarStat = FileSystem.get(conf).getFileStatus(jarPath);
+      appMasterJar.setResource(ConverterUtils.
+      getYarnUrlFromPath(jarPath));
+      appMasterJar.setSize(jarStat.getLen());
+      appMasterJar.setTimestamp(jarStat.getModificationTime());
+      appMasterJar.setType(LocalResourceType.FILE);
+      appMasterJar.setVisibility(LocalResourceVisibility.PUBLIC);
+    ```  
+    * 为ApplicationMaster设置CLASSPATH：你可能会使用shell命令运行你的ApplicationMaster，这样就需要一些环境变量。客户端可以指定一系列环境变量。  
+    ```java
+      Map<String, String>appMasterEnv = new HashMap<String, String>();
+      for (String c : conf.getStrings(YarnConfiguration.YARN_APPLICATION_CLASSPATH,
+            YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH))
+      {
+         Apps.addToEnvironment(appMasterEnv, Environment.CLASSPATH.name(),c.trim());
+      }
+      Apps.addToEnvironment(appMasterEnv,Environment.CLASSPATH.name(),Environment.PWD.$() + File.separator + "*");
+    ```  
+    * 为ApplicationMaster设置资源需求条件：ApplicationMaster对资源的需求以内存和CPU cores的形式定义。  
+    ```java
+      Resource capability = Records.newRecord(Resource.class);
+      capability.setMemory(256);
+      capability.setVirtualCores(1);
+    ```  
+    * 启动ApplicationMaster服务的命令：在本例中，ApplicationMaster是一个Java程序，因此，客户端需要定义一个Java的jar命令去启动ApplicationMaster。  
+    ```java
+      amContainer.setCommands(Collections.singletonList("$JAVA_HOME/bin/java" + " –Xmx256M"
+      + " com.packt.firstyarnapp.ApplicationMaster" + " " + command 
+      + " " + String.valueOf(n) + " 1>" 
+      + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2>"
+      + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr" ));
+      amContainer.setLocalResources(Collections.singletonMap("firstyarn-app.jar",appMasterJar));
+      amContainer.setEnvironment(appMasterEnv);
+    ```  
+    * 创建ApplicationSubmissionContext：客户端为application定义ApplicationSubmissionContext。submission context包含了诸如application名、队列、优先级等等的信息。  
+    ```java
+      ApplicationSubmissionContextappContext = app.getApplicationSubmissionContext();
+      appContext.setApplicationName("first-yarn-app");
+      appContext.setApplicationType("YARN");
+      appContext.setAMContainerSpec(amContainer);
+      appContext.setResource(capability);
+      appContext.setQueue("default");
+    ```  
+    * 提交application并等待完成：客户端提交application并且等待它的完成。他会请求ResourceManager要application的状态。  
+    ```java
+      ApplicationIdappId = appContext.getApplicationId();
+      System.out.println("Submitting application " + appId);
+      yarnClient.submitApplication(appContext);
+      ApplicationReportappReport = yarnClient.getApplicationReport(appId);
+      YarnApplicationStateappState = appReport.getYarnApplicationState();
+      while (appState != YarnApplicationState.FINISHED &&
+            appState != YarnApplicationState.KILLED &&
+            appState != YarnApplicationState.FAILED) {
+         Thread.sleep(100);
+         appReport = yarnClient.getApplicationReport(appId);
+         appState = appReport.getYarnApplicationState();
+      }
+    ```  
+    
+#### Step 3-导出项目并且复制资源  
 你需要将Java项目导出为jar文件，并且将jar文件上传到HDFS上。如果你创建为Client.java和ApplicationMaster.java创建了两个不同的项目，那么你需要将两个项目都导出jar文件，并且将ApplicationMaster jar文件上传到HDFS上。在这个案例中，你仅仅只需要创建一个jar文件。为了复制文件到HDFS上，你可以使用Hadoop中的hdfs命令，要么使用put选项要么使用copyFromLocal选项。假如jar文件的名字是first-yarn-app.jar，那么hdfs命令应该像这样：  
 ```shell
 bin/hdfs dfs -put first-yarn-app.jar /user/hduser/first-yarn-app.jar
@@ -483,4 +602,6 @@ application_1436101688138_0009
 Application completed successfully
 ```  
 程序的输出将会展示在终端。你也可以在ResourceManager web UI上查看被提交应用的状态。就像下面截图所展示的一样：  
-![Image](/Images/ownyarnapp.png)
+![Image](/Images/ownyarnapp.png)  
+
+提示：编写一个完整的YARN兼容的分布式应用是一个非常复杂的任务并且它不允许开发者去关注商业逻辑。一个开发者/管理员也需要去监控和管理运行的应用。Apache Slider和Apache Twill是两个当前正在孵化状态的项目，这两个项目目的是为了减少在YARN上编写应用的复杂性和与YARN更简单的进行集成。想要阅读更多有关这些项目的信息，可以参考它们的官方文档
