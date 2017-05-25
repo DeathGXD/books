@@ -63,7 +63,7 @@ Hadoop配置文件包含name/value属性作为XML数据。这些文件按它们�
 
 提示：在YARN中普遍使用到的一个Java系统属性扩展变量是${user.name}。  
 
-想要阅读更多有关YARNConfiguration类的内容，你可以参考Hadoop API文档 [API]: http://hadoop.apache.org/docs/r2.5.1/api/org/apache/hadoop/yarn/conf/YarnConfiguration.html 。  
+想要阅读更多有关YARNConfiguration类的内容，你可以参考Hadoop API文档 http://hadoop.apache.org/docs/r2.5.1/api/org/apache/hadoop/yarn/conf/YarnConfiguration.html 。  
 
 #### ApplicationSubmissionContext  
 ApplicationSubmissionContext是一个抽象类，包含了给一个application运行ApplicationMaster所需要的所有信息。客户端定义了submission context，包含了应用的属性，运行ApplicationMaster服务的命令和资源请求的列表，等等。在应用提交请求期间，客户端会发送这个context到ResourceManager。ResourceManager使用这个context保存应用的状态并且在一个NodeManager节点上运行ApplicationMaster进程。  
@@ -75,7 +75,7 @@ ApplicationSubmissionContext类包含下面的内容：
 * AM非托管的Boolean标志符和container管理
 * application最大尝试数和资源请求  
 
-阅读更多关于ApplicatiionSubmissionContext类的细节，可以参考位于(http://hadoop.apache.org/docs/r2.5.2/api/org/apache/hadoop/yarn/api/records/ApplicationSubmissionContext.html)的Hadoop API文档。  
+阅读更多关于ApplicatiionSubmissionContext类的细节，可以参考位于http://hadoop.apache.org/docs/r2.5.2/api/org/apache/hadoop/yarn/api/records/ApplicationSubmissionContext.html 的Hadoop API文档。  
 
 #### ContainerLaunchContext  
 ContainerLaunchContext是一个抽象类，包含了在一个节点上启动container所需要的所有信息。NodeManager进程使用launch context启动与application相关联的containers。ApplicationMaster是application的第一个container并且它的launch context被定义在ApplicationSubmissionContext类中。  
@@ -87,7 +87,7 @@ ContainerLaunchContext对象包含下面的信息：
 * 与关联的辅助服务和令牌有关的信息
 * Application ACLs(应用访问类型，查看和修改应用)  
 
-阅读更多关于ApplicatiionSubmissionContext类的细节，可以参考位于(http://hadoop.apache.org/docs/r2.5.2/api/org/apache/hadoop/yarn/api/records/ContainerLaunchContext.html)的Hadoop API文档。  
+阅读更多关于ApplicatiionSubmissionContext类的细节，可以参考位于http://hadoop.apache.org/docs/r2.5.2/api/org/apache/hadoop/yarn/api/records/ContainerLaunchContext.html 的Hadoop API文档。  
 
 #### 通信协议  
 YARN API包含4种通信协议用来与YARN客户端进行交互和ApplicationMaster与YARN服务进行交互，比如：ResourceManager、NodeManager和Timeline Server。这些协议都被定义在org.apache.hadoop.yarn.api包中。本节给这些接口和它们的用法一个简答的介绍：  
@@ -117,7 +117,7 @@ ContainerManagementProtocol接口被用作活跃的ApplicationMaster和NodeManag
 ##### ApplicationHistoryProcotol  
 ApplicationHistoryProtocol是从Hadoop 2.5开始新增加的协议。该协议被客户端用来与application history服务(Timeline服务)进行通信，以获取相关完成的applications的信息。Timeline服务保留着提交到YARN集群上的applications信息的历史数据。客户端可以使用这个接口获取已经完成的applications、containers和application attempts的记录。  
 
-想要阅读更多可用的通信协议信息，你可以参考Hadoop API文档http://hadoop.apache.org/docs/r2.5.1/api/org/apache/hadoop/yarn/api/package-summary.html  
+想要阅读更多可用的通信协议信息，你可以参考Hadoop API文档 http://hadoop.apache.org/docs/r2.5.1/api/org/apache/hadoop/yarn/api/package-summary.html  
 
 #### YARN客户端API
 YARN客户端API请参考定义在org.apache.hadoop.yarn.api包中的类。这些类使用早前提到的协议，当编写基于Java的YARN应用时被使用。这些是暴露给客户端/ApplicationMaster服务与YARN进程进行通信的类。  
@@ -128,7 +128,7 @@ YARN客户端API请参考定义在org.apache.hadoop.yarn.api包中的类。这�
 * **NMClient/NMClientAsync**：这些有助于阻塞式AMRMClient和非阻塞式AMRMClientAsync在ApplicationMaster与NodeManager之间的进行通信。类似于与ResourceManager连接，ApplicationMaster创建一个连接到分配了container的NodeManager。ApplicationMaster使用NMClient去请求启动/停止containers和获得container的状态。
 * **AHSClient/TimelineClient**：这个有助于客户端与Timeline服务之间的通信。一旦applications完成，客户端可以从Timeline服务中获取application的记录。客户端使用AHSClient去获取已经完成的application的列表，attempts和containers。  
 
-想要阅读更多有关YARN客户端API，你可以参考Hadoop API文档http://hadoop.apache.org/docs/r2.5.1/api/org/apache/hadoop/yarn/api/package-summary.html  
+想要阅读更多有关YARN客户端API，你可以参考Hadoop API文档 http://hadoop.apache.org/docs/r2.5.1/api/org/apache/hadoop/yarn/api/package-summary.html  
 
 ### 编写自己的YARN应用  
 YARN框架可以灵活的在集群环境中运行任何应用。应用可以像一个Java进程，一个shell脚本或者一个简单的date命令一样简单。ResourceManager管理着集群资源的分配，NodeManager通过特定的应用框架执行任务；比如Hadoop MapReduce任务是map任务和reduce任务。  
