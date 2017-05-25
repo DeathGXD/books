@@ -504,7 +504,7 @@ public Boolean run(String[] args) throws Exception {
 YarnClientApplication app = yarnClient.createApplication();
 ```  
 3. **为ApplicationMaster定义ContainerLaunchContext**：一个application中的第一个container是作为ApplicationMaster的container。客户端会定义一个包含启动ApplicationMaster服务的ContainerLaunchContext。其中ContainerLaunchContext会包含下面的信息：
-    * 为ApplicationMaster设置jar文件：NodeManager应该能够找到jar文件。其中jar文件是位于HDFS上并且被NodeManager作为一个LocalResource访问，代码如下：  
+    * **为ApplicationMaster设置jar文件**：NodeManager应该能够找到jar文件。其中jar文件是位于HDFS上并且被NodeManager作为一个LocalResource访问，代码如下：  
     ```java
       ContainerLaunchContextamContainer = Records.newRecord(ContainerLaunchContext.class);
       LocalResourceappMasterJar = Records.newRecord(LocalResource.class);
@@ -516,7 +516,7 @@ YarnClientApplication app = yarnClient.createApplication();
       appMasterJar.setType(LocalResourceType.FILE);
       appMasterJar.setVisibility(LocalResourceVisibility.PUBLIC);
     ```
-    * 为ApplicationMaster设置CLASSPATH：你可能会使用shell命令运行你的ApplicationMaster，这样就需要一些环境变量。客户端可以指定一系列环境变量。  
+    * **为ApplicationMaster设置CLASSPATH**：你可能会使用shell命令运行你的ApplicationMaster，这样就需要一些环境变量。客户端可以指定一系列环境变量。  
     ```java
       Map<String, String>appMasterEnv = new HashMap<String, String>();
       for (String c : conf.getStrings(YarnConfiguration.YARN_APPLICATION_CLASSPATH,
@@ -526,13 +526,13 @@ YarnClientApplication app = yarnClient.createApplication();
       }
       Apps.addToEnvironment(appMasterEnv,Environment.CLASSPATH.name(),Environment.PWD.$() + File.separator + "*");
     ```
-    * 为ApplicationMaster设置资源需求条件：ApplicationMaster对资源的需求以内存和CPU cores的形式定义。  
+    * **为ApplicationMaster设置资源需求条件**：ApplicationMaster对资源的需求以内存和CPU cores的形式定义。  
     ```java
       Resource capability = Records.newRecord(Resource.class);
       capability.setMemory(256);
       capability.setVirtualCores(1);
     ```
-    * 启动ApplicationMaster服务的命令：在本例中，ApplicationMaster是一个Java程序，因此，客户端需要定义一个Java的jar命令去启动ApplicationMaster。  
+    * **启动ApplicationMaster服务的命令**：在本例中，ApplicationMaster是一个Java程序，因此，客户端需要定义一个Java的jar命令去启动ApplicationMaster。  
     ```java
       amContainer.setCommands(Collections.singletonList("$JAVA_HOME/bin/java" + " –Xmx256M"
       + " com.packt.firstyarnapp.ApplicationMaster" + " " + command 
@@ -542,7 +542,7 @@ YarnClientApplication app = yarnClient.createApplication();
       amContainer.setLocalResources(Collections.singletonMap("firstyarn-app.jar",appMasterJar));
       amContainer.setEnvironment(appMasterEnv);
     ```  
-4. 创建ApplicationSubmissionContext：客户端为application定义ApplicationSubmissionContext。submission context包含了诸如application名、队列、优先级等等的信息。  
+4. **创建ApplicationSubmissionContext**：客户端为application定义ApplicationSubmissionContext。submission context包含了诸如application名、队列、优先级等等的信息。  
 ```java
    ApplicationSubmissionContextappContext = app.getApplicationSubmissionContext();
    appContext.setApplicationName("first-yarn-app");
@@ -551,7 +551,7 @@ YarnClientApplication app = yarnClient.createApplication();
    appContext.setResource(capability);
    appContext.setQueue("default");
 ```  
-5. 提交application并等待完成：客户端提交application并且等待它的完成。他会请求ResourceManager要application的状态。  
+5. **提交application并等待完成**：客户端提交application并且等待它的完成。他会请求ResourceManager要application的状态。  
 ```java
    ApplicationIdappId = appContext.getApplicationId();
    System.out.println("Submitting application " + appId);
