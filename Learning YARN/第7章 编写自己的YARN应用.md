@@ -604,4 +604,11 @@ Application completed successfully
 程序的输出将会展示在终端。你也可以在ResourceManager web UI上查看被提交应用的状态。就像下面截图所展示的一样：  
 ![Image](/Images/ownyarnapp.png)  
 
-提示：编写一个完整的YARN兼容的分布式应用是一个非常复杂的任务并且它不允许开发者去关注商业逻辑。一个开发者/管理员也需要去监控和管理运行的应用。Apache Slider和Apache Twill是两个当前正在孵化状态的项目，这两个项目目的是为了减少在YARN上编写应用的复杂性和与YARN更简单的进行集成。想要阅读更多有关这些项目的信息，可以参考它们的官方文档
+提示：编写一个完整的YARN兼容的分布式应用是一个非常复杂的任务并且它不允许开发者去关注业务逻辑。一个开发者/管理员也需要去监控和管理运行的应用。Apache Slider和Apache Twill是两个当前正在孵化状态的项目，这两个项目目的是为了减少在YARN上编写应用的复杂性和更简单的与YARN进行集成。想要阅读更多有关这些框架的信息，可以参考它们的官方文档http://slider.incubator.apache.org/和http://twill.incubator.apache.org。  
+
+### 总结
+编写自己的Hadoop-YARN应用允许用户在分布式环境中实现自己的业务逻辑(不同于MapReduce编程)。本章涉及了YARN APIs的基本知识并且通过编写一个简单的YARN应用和你一起走过了这一章。想要阅读更多关于这一主题的内容，你可以参考Hadoop文档http://hadoop.apache.org/docs/r2.5.1/hadoop-yarn/hadoop-yarn-site/WritingYarnApplications.html。  
+
+Hadoop文档粗略的涉及到编写YARN应用时用到的所有YARN API。你也可以参考Hortonworks在GitHub上的一个例子 https://github.com/apache/hadoop-common/tree/trunk/hadoop-yarnproject/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applicationsdistributedshell。你可以编译并且在Hadoop-YARN集群上运行它。  
+
+下一章涉及到YARN内部细节和YARN组件的核心服务。它有助于Java开发者和开源代码贡献者更好的理解YARN组件之间的通信和更深入的学习YARN的架构。
