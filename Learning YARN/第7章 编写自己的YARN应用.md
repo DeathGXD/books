@@ -484,7 +484,8 @@ public class Client {
       }
    }
 }
-```  
+```  
+
 你需要添加给定的代码片段到Client.java类的run()方法中：  
 1. **读取YARNConfiguration和初始化YARNClient**：类似于ApplicationMaster，客户端同样使用YARNConfiguration类去加载Hadoop-YARN的配置文件和读取指定的输入参数。客户端在客户端节点启动一个YARNClient服务。  在本例中，前两个参数是直接传给ApplicationMaster中的ContainerLaunchContext的，第三个参数是位于HDFS的路径用来给job执行的数据(带有ApplicationMaster的jar文件)：  
 ```java
@@ -497,13 +498,13 @@ public Boolean run(String[] args) throws Exception {
    yarnClient.init(conf);
    yarnClient.start();
 }
-```  
+```
 2. **连接到ResourceManager并且请求一个新的application ID**：客户端连接到ResourceManager服务请求一个新的application。请求的响应(YarnClientApplication-GetNewApplicationResponse)中包含一个新的application ID和集群中最小和最大的资源容量。  
 ```java
 YarnClientApplication app = yarnClient.createApplication();
 ```  
-3. **为ApplicationMaster定义ContainerLaunchContext**：一个application中的第一个container是作为ApplicationMaster的container。客户端会定义一个包含启动ApplicationMaster服务的ContainerLaunchContext。其中ContainerLaunchContext会包含下面的信息：  
-    * 为ApplicationMaster设置jar文件：NodeManager应该能够找到jar文件。其中jar文件是位于HDFS上并且被NodeManager作为一个LocalResource访问，代码如下：  
+3. **为ApplicationMaster定义ContainerLaunchContext**：一个application中的第一个container是作为ApplicationMaster的container。客户端会定义一个包含启动ApplicationMaster服务的ContainerLaunchContext。其中ContainerLaunchContext会包含下面的信息：
+    * 为ApplicationMaster设置jar文件：NodeManager应该能够找到jar文件。其中jar文件是位于HDFS上并且被NodeManager作为一个LocalResource访问，代码如下：  
     ```java
       ContainerLaunchContextamContainer = Records.newRecord(ContainerLaunchContext.class);
       LocalResourceappMasterJar = Records.newRecord(LocalResource.class);
@@ -514,8 +515,8 @@ YarnClientApplication app = yarnClient.createApplication();
       appMasterJar.setTimestamp(jarStat.getModificationTime());
       appMasterJar.setType(LocalResourceType.FILE);
       appMasterJar.setVisibility(LocalResourceVisibility.PUBLIC);
-    ```  
-    * 为ApplicationMaster设置CLASSPATH：你可能会使用shell命令运行你的ApplicationMaster，这样就需要一些环境变量。客户端可以指定一系列环境变量。  
+    ```
+    * 为ApplicationMaster设置CLASSPATH：你可能会使用shell命令运行你的ApplicationMaster，这样就需要一些环境变量。客户端可以指定一系列环境变量。  
     ```java
       Map<String, String>appMasterEnv = new HashMap<String, String>();
       for (String c : conf.getStrings(YarnConfiguration.YARN_APPLICATION_CLASSPATH,
@@ -524,14 +525,14 @@ YarnClientApplication app = yarnClient.createApplication();
          Apps.addToEnvironment(appMasterEnv, Environment.CLASSPATH.name(),c.trim());
       }
       Apps.addToEnvironment(appMasterEnv,Environment.CLASSPATH.name(),Environment.PWD.$() + File.separator + "*");
-    ```  
-    * 为ApplicationMaster设置资源需求条件：ApplicationMaster对资源的需求以内存和CPU cores的形式定义。  
+    ```
+    * 为ApplicationMaster设置资源需求条件：ApplicationMaster对资源的需求以内存和CPU cores的形式定义。  
     ```java
       Resource capability = Records.newRecord(Resource.class);
       capability.setMemory(256);
       capability.setVirtualCores(1);
-    ```  
-    * 启动ApplicationMaster服务的命令：在本例中，ApplicationMaster是一个Java程序，因此，客户端需要定义一个Java的jar命令去启动ApplicationMaster。  
+    ```
+    * 启动ApplicationMaster服务的命令：在本例中，ApplicationMaster是一个Java程序，因此，客户端需要定义一个Java的jar命令去启动ApplicationMaster。  
     ```java
       amContainer.setCommands(Collections.singletonList("$JAVA_HOME/bin/java" + " –Xmx256M"
       + " com.packt.firstyarnapp.ApplicationMaster" + " " + command 
@@ -541,30 +542,30 @@ YarnClientApplication app = yarnClient.createApplication();
       amContainer.setLocalResources(Collections.singletonMap("firstyarn-app.jar",appMasterJar));
       amContainer.setEnvironment(appMasterEnv);
     ```  
-    * 创建ApplicationSubmissionContext：客户端为application定义ApplicationSubmissionContext。submission context包含了诸如application名、队列、优先级等等的信息。  
-    ```java
-      ApplicationSubmissionContextappContext = app.getApplicationSubmissionContext();
-      appContext.setApplicationName("first-yarn-app");
-      appContext.setApplicationType("YARN");
-      appContext.setAMContainerSpec(amContainer);
-      appContext.setResource(capability);
-      appContext.setQueue("default");
-    ```  
-    * 提交application并等待完成：客户端提交application并且等待它的完成。他会请求ResourceManager要application的状态。  
-    ```java
-      ApplicationIdappId = appContext.getApplicationId();
-      System.out.println("Submitting application " + appId);
-      yarnClient.submitApplication(appContext);
-      ApplicationReportappReport = yarnClient.getApplicationReport(appId);
-      YarnApplicationStateappState = appReport.getYarnApplicationState();
-      while (appState != YarnApplicationState.FINISHED &&
-            appState != YarnApplicationState.KILLED &&
-            appState != YarnApplicationState.FAILED) {
-         Thread.sleep(100);
-         appReport = yarnClient.getApplicationReport(appId);
-         appState = appReport.getYarnApplicationState();
-      }
-    ```  
+4. 创建ApplicationSubmissionContext：客户端为application定义ApplicationSubmissionContext。submission context包含了诸如application名、队列、优先级等等的信息。  
+```java
+   ApplicationSubmissionContextappContext = app.getApplicationSubmissionContext();
+   appContext.setApplicationName("first-yarn-app");
+   appContext.setApplicationType("YARN");
+   appContext.setAMContainerSpec(amContainer);
+   appContext.setResource(capability);
+   appContext.setQueue("default");
+```  
+5. 提交application并等待完成：客户端提交application并且等待它的完成。他会请求ResourceManager要application的状态。  
+```java
+   ApplicationIdappId = appContext.getApplicationId();
+   System.out.println("Submitting application " + appId);
+   yarnClient.submitApplication(appContext);
+   ApplicationReportappReport = yarnClient.getApplicationReport(appId);
+   YarnApplicationStateappState = appReport.getYarnApplicationState();
+   while (appState != YarnApplicationState.FINISHED &&
+         appState != YarnApplicationState.KILLED &&
+         appState != YarnApplicationState.FAILED) {
+      Thread.sleep(100);
+      appReport = yarnClient.getApplicationReport(appId);
+      appState = appReport.getYarnApplicationState();
+   }
+```  
     
 #### Step 3-导出项目并且复制资源  
 你需要将Java项目导出为jar文件，并且将jar文件上传到HDFS上。如果你创建为Client.java和ApplicationMaster.java创建了两个不同的项目，那么你需要将两个项目都导出jar文件，并且将ApplicationMaster jar文件上传到HDFS上。在这个案例中，你仅仅只需要创建一个jar文件。为了复制文件到HDFS上，你可以使用Hadoop中的hdfs命令，要么使用put选项要么使用copyFromLocal选项。假如jar文件的名字是first-yarn-app.jar，那么hdfs命令应该像这样：  
