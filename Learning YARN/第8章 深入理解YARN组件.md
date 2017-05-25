@@ -3,12 +3,14 @@ YARN包含了多种高效和可扩展的组件, 使得YARN变成一个强大的�
 在本章中, 我们将会涉及到下面的主题：
 * 理解ResourceManager
 * 理解NodeManager
-* 辅助的服务、本地资源、日志聚合
-* Timeline服务概览、web application proxy和YARN调度负载模拟器  
+* 与辅助服务协同工作、本地资源、日志聚合
+* Timeline服务预览、web application proxy和YARN调度负载模拟器  
 
 ### 理解ResourceManager  
-ResourceManager是YARN框架的核心组件, 负责管理一个多节点集群的资源。它促使资源的分配和记录YARN集群上跨多个节点运行的分布式应用。它与每个节点上运行的NodeManager进程和每个应用的服务ApplicationMaster共同工作。他管理着整个集群的资源和执行YARN应用。ResourceManager拥有多个子组件协助它有效的管理一个多节点的集群，并且集群上并行运行着成千上万的分布式的，资源枯竭的并且有时限的应用。下图展示了具体的情形：  
+ResourceManager是YARN框架的核心组件, 负责管理一个多节点集群的资源。它促使资源的分配和记录YARN集群上跨多个节点运行的分布式应用。它与每个节点上运行的NodeManager进程和每个应用的服务ApplicationMaster共同工作。他管理着整个集群的资源和执行YARN应用。  
 
+ResourceManager拥有多个子组件协助它有效的管理一个多节点的集群，并且集群上并行运行着成千上万的分布式的，资源密集的并且有时限的应用。下图展示了具体的情形：  
+![image](/Images/yarn-deep-components.PNG)  
 
 #### 客户端和管理接口
 ResourceManager暴露方法给client和集群管理员，用来跟ResourceManager进行RPC通信和接受管理命令的优先级。这里是两个用来跟ResourceManager进行通信的类：  
