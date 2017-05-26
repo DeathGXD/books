@@ -15,7 +15,7 @@ ResourceManager拥有多个子组件协助它有效的管理一个多节点的�
 #### 客户端和管理接口
 ResourceManager暴露方法给client和集群管理员，用来跟ResourceManager进行RPC通信和接受管理命令的优先级。这里是两个用来跟ResourceManager进行通信的类：
 1. ClientRMService  
-ClientRMService类是ResourceManager的客户端接口。所有的客户端用来创建与ResouceManager的RPC连接。这个模块处理所有的ResouceManager的RPC接口。这个服务的实现被定义在org.apache.hadoop.yarn.server. resourcemanager.ClientRMService包中。客户端初始化这个服务使用客户端配置文件，比如yarn-site.xml。  
+ClientRMService类是ResourceManager的客户端接口。所有的客户端用来创建与ResouceManager的RPC连接。这个模块处理所有的ResouceManager的RPC接口。这个服务的实现被定义在org.apache.hadoop.yarn.server.resourcemanager.ClientRMService包中。客户端初始化这个服务使用客户端配置文件，比如yarn-site.xml。  
 
 客户端请求ResourceManager：  
     * Application requests：这个接口暴露了诸如创建新的application请求，提交applications到集群，杀死一个application，列出containers，获取applications和application attempt记录等等服务给客户端。
