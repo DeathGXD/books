@@ -51,15 +51,26 @@ ResourceManager与NodeManager进行通信。NodeManager会定期向ResourceManag
 
 
 
-### 理解NodeManager  
-
+### 理解NodeManager  
+NodeManager节点是YARN的工作节点，负责向ResourceManager更新一个节点上的可用资源。它同样也负责健康一个节点的健康状况和为一个应用执行container。下面展示了NodeManager进程中包含的多个子组件，接下来会对这些子组件进行详细的描述：  
+![image](/Images/yarn-nm-component.PNG)  
 
 #### 状态更新
+YARN集群的可用资源是由该集群上所有的NodeManager节点上的可用资源相加而来。为了有效的利用集群资源，持续对整个集群的资源进行追踪是非常重要的。NodeManager会定期向ResourceManager发送节点资源和健康状况状态的更新。这能够让ResourceManager有效的调度应用的执行和提高集群的性能。接下来的小节中将会提到一些NodeManager中定义的用来发送更新的类。  
+1. NodeStatusUpdater  
+每个带有NodeManager进程的子节点都会向ResourceManager进行注册。NodeManager向ResourceManager指定它的可用资源。它有一个StatusUpdater服务，用来更新运行在它上面的应用和container相关的当前状态。NodeManager依据下面几个方面计算可用资源：  
+    * 物理内存
+    * 虚拟内存和物理内存的比例
+    * CPU核数
+    * 已停止的containers的持续时间  
+    
+    它对外暴露了公共的接口用来请求和更新container当前的状态。该服务的实现被定义org.apache.hadoop.yarn.server.nodemanger.NodeStatusUpdaterImpl.
 
-
+2. NodeManagerMetrics
+NodeManager进程管理着其所在节点上的可用资源的度量。它存储节点上原始的度量信息，并且以不同的事件更新每个container的度量，比如：container启动，完成，killed，等等。然而当前的资源度量仅仅考虑内存和CPU核数。这个服务的实现被定义在org.apache.hadoop.yarn.server.nodemanager.metrics.NodeManagerMetrics.
 
 #### 状态和健康管理
-
+周期性的检测集群中不同节点的健康状况是非常重要的，并且如果发现有任何节点是不健康的，应该采取必要的措施。NodeManager服务提供了工具可以在任何时间点去管理节点的状态和健康情况。
 
 
 #### Container管理
