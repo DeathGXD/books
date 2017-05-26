@@ -53,7 +53,7 @@ ResourceManager与NodeManager进行通信。NodeManager会定期向ResourceManag
 
 ### 理解NodeManager  
 NodeManager节点是YARN的工作节点，负责向ResourceManager更新一个节点上的可用资源。它同样也负责健康一个节点的健康状况和为一个应用执行container。下面展示了NodeManager进程中包含的多个子组件，接下来会对这些子组件进行详细的描述：  
-![image](/Images/yarn-nm-component.PNG)  
+![image](/Images/yarn-nm-component.png)  
 
 #### 状态更新
 YARN集群的可用资源是由该集群上所有的NodeManager节点上的可用资源相加而来。为了有效的利用集群资源，持续对整个集群的资源进行追踪是非常重要的。NodeManager会定期向ResourceManager发送节点资源和健康状况状态的更新。这能够让ResourceManager有效的调度应用的执行和提高集群的性能。接下来的小节中将会提到一些NodeManager中定义的用来发送更新的类。  
