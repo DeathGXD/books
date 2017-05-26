@@ -16,9 +16,9 @@ ResourceManager拥有多个子组件协助它有效的管理一个多节点的�
 ResourceManager暴露方法给client和集群管理员，用来跟ResourceManager进行RPC通信和接受管理命令的优先级。这里是两个用来跟ResourceManager进行通信的类：
 1. **ClientRMService**  
 ClientRMService类是ResourceManager的客户端接口。所有的客户端用来创建与ResouceManager的RPC连接。这个模块处理所有的ResouceManager的RPC接口。这个服务的实现被定义在org.apache.hadoop.yarn.server.resourcemanager.ClientRMService包中。客户端初始化这个服务使用客户端配置文件，比如yarn-site.xml。客户端请求ResourceManager：  
-    * **应用请求**：这个接口暴露了诸如创建新的application请求，提交applications到集群，杀死一个application，列出containers，获取applications和application attempt记录等等服务给客户端。
-    * **集群度量**：客户端也可以使用这个服务请求ResourceManager分享集群的度量，节点的容量，调度的细节等等信息。
-    * **安全**：为了连接到一个安全的集群环境，客户端需要使用ResourceManager提供的授权令牌和访问控制列表。  
+    * **应用请求**：这个接口暴露了诸如创建新的application请求，提交applications到集群，杀死一个application，列出containers，获取applications和application attempt记录等等服务给客户端。  
+    * **集群度量**：客户端也可以使用这个服务请求ResourceManager分享集群的度量，节点的容量，调度的细节等等信息。  
+    * **安全**：为了连接到一个安全的集群环境，客户端需要使用ResourceManager提供的授权令牌和访问控制列表。  
 
 想要阅读更多有关定义在ClientRMService的不同方法，你可以参考grepcode的网站地<http://grepcode.com/file/repo1.maven.org/maven2/org.apache.hadoop/hadoop-yarnserver-resourcemanager/2.6.0/org/apache/hadoop/yarn/server/resourcemanager/ClientRMService.java>  
 
@@ -26,8 +26,8 @@ ClientRMService类是ResourceManager的客户端接口。所有的客户端用�
 AdminService类被集群管理员用来管理ResourceManager服务。集群管理员在使用命令行选项rmadmin命令的时候，内部使用的就是AdminService。
 下面列出了集群管理员通过AdminService可以执行的一些操作：  
     * **刷新集群的节点、访问控制列表和队列**
-    * **检查集群的健康状态**
-    * **管理ResourceManager的高可用**  
+    * **检查集群的健康状态**  
+    * **管理ResourceManager的高可用**  
     
 #### 核心接口
 ResourceManager的核心包含调度和应用的管理。下面的类中定义了ResourceManager如何执行任务的调度、应用的管理和状态信息的管理。  
