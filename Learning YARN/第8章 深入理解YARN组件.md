@@ -31,12 +31,20 @@ AdminService类被集群管理员用来管理ResourceManager服务。集群管�
     
 #### 核心接口
 ResourceManager的核心包含调度和应用的管理。下面的类中定义了ResourceManager如何执行任务的调度、应用的管理和状态信息的管理。  
-1. YarnScheduler  
-YarnScheduler负责资源的分配
+1. YarnScheduler  
+YarnScheduler负责资源的分配  
 
+2. RMAppManager  
 
+3. RMStateStore  
+
+4. SchedulingMonitor  
 
 #### NodeManager接口
+ResourceManager与NodeManager进行通信。NodeManager会定期向ResourceManager汇报NodeManager节点的健康和资源信息。下面是一些ResourceManager用来管理集群中所有NodeManager节点的类：  
+1. NMLivelinessMonitor  
+
+2. ApplicationMasterLauncher  
 
 
 #### 安全和令牌管理  
