@@ -61,7 +61,7 @@ ApplicationMaster会请求正在运行的的container的当前状态。container
 一个应用完成之后，ApplicationMaster会	发送一个注销请求到ResourceManager。ApplicationMaster会终止自己的运行并且将使用的内存归还给NodeManager。对于一个应用来说，会有一个最终的结果和一个最终的状态。ResourceManager会将应用最终结果标记为FINISHED。应用的最终的状态是通过ApplicationMaster进行设置的，指的是应用已经执行过。  
 
 YARN客户端可能在任何时间点通过发送kill请求到ResourceManager来中断应用的执行。ResourceManager会杀死那个应用正在运行的container并且将应用的结果更改为已经完成的。  
-![image](/Image/application-completion.png)  
+![image](/Images/application-completion.png)  
 
 ### 提交一个MapReduce样本任务  
 当一个MapReduce任务提交到Hadoop-YARN集群上时，一系列事件会发生在不同的组件中。本节，我们将会提交一个Hadoop-YARN样本任务到集群上。我们将在图像抓怕的帮助下讨论应用的流程并且弄明白一系列事件是如何发生的。  
