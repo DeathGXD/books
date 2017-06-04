@@ -80,4 +80,4 @@ yarn jar <jarPath> <JobName> <arguments>
 ResourceManager接受应用并且在NodeManager节点中的一个节点上启动一个 MRApplicationMaster服务用来管理应用的执行。然后ApplicationMaster会向ResourceManager进行注册。在注册成功后，一个跟踪URL会被提供用来跟踪那个应用的状态和已经执行的不同container的进展。  
 
 #### 更新ResourceManager Web UI  
-一旦应用被成功的提交并且被ResourceManager成功接收，那么集群的资源度量会被更新并且应用的进展在ResourceManager wen接口是可见的。正如下面截图所展示的：  
+一旦应用被成功的提交并且被ResourceManager成功接收，那么集群的资源度量会被更新并且应用的进展在ResourceManager web接口是可见的。正如下面截图所展示的：  
