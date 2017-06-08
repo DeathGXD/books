@@ -46,7 +46,7 @@ Hadoop配置文件包含name/value属性作为XML数据。这些文件按它们�
 </property>
 ```  
 
-##### 扩展变量 
+##### 扩展变量
 一个属性值可能包含其他定义在配置文件中的属性或者Java进程属性需要的值。可以参考下面resourcemanager主机名的例子：
 ```xml
 <property>
@@ -91,7 +91,7 @@ ContainerLaunchContext对象包含下面的信息：
 
 #### 通信协议  
 YARN API包含4种通信协议用来与YARN客户端进行交互和ApplicationMaster与YARN服务进行交互，比如：ResourceManager、NodeManager和Timeline Server。这些协议都被定义在org.apache.hadoop.yarn.api包中。本节给这些接口和它们的用法一个简答的介绍：  
-![image](/Images/yarn-communication-protocol.PNG)  
+![image](/Learning YARN/Images/yarn-communication-protocol.PNG)  
 
 ##### ApplicationClientProtocol  
 ApplicationClientProtocol接口定义客户端与ResourceManager服务之间的通信协议。  
@@ -136,7 +136,7 @@ YARN框架可以灵活的在集群环境中运行任何应用。应用可以像�
 在本节中，你将会编写你自己的通过YARN运行在分布式环境中的应用。  
 
 完整的程序可以概括为4个步骤，就如下面图中所示：  
-![image](/Images/create-yarn-app-step.PNG)
+![image](/Learning YARN/Images/create-yarn-app-step.PNG)
 
 #### Step 1-创建一个新的项目并且添加Hadoop-YARN JAR文件  
 我们将会在用Eclipse创建一个新的Java项目，并且使用YARN client API写一个简单的YARN application。你要么创建一个简单的Java项目，要么创建一个Maven项目。  
@@ -217,7 +217,7 @@ public class ApplicationMaster {
       final String shellCommand = args[0];
       final int numOfContainers = Integer.valueOf(args[1]);
       Configuration conf = new YarnConfiguration();
-      
+
       // Point #2
       System.out.println("Initializing AMRMCLient");
       AMRMClient<ContainerRequest> rmClient = AMRMClient.createAMRMClient();
@@ -227,11 +227,11 @@ public class ApplicationMaster {
       NMClient nmClient = NMClient.createNMClient();
       nmClient.init(conf);
       nmClient.start();
-      
+
       // Point #3
       System.out.println("Register ApplicationMaster");
       rmClient.registerApplicationMaster(NetUtils.getHostname(), 0, "");
-      
+
       // Point #4
       Priority priority = Records.newRecord(Priority.class);
       priority.setPriority(0);
@@ -244,7 +244,7 @@ public class ApplicationMaster {
          // Resource, nodes, racks, priority and relax locality flag
          rmClient.addContainerRequest(containerRequested);
       }
-      
+
       // Point #6
       int allocatedContainers = 0;
       System.out.println("Requesting container allocation from ResourceManager");
@@ -264,7 +264,7 @@ public class ApplicationMaster {
          }
          Thread.sleep(100);
       }
-      
+
       // Point #6
       int completedContainers = 0;
       while (completedContainers < numOfContainers) {
@@ -397,7 +397,7 @@ public class Client {
             e.printStackTrace();
          }
       }
-      
+
       public boolean run(String[] args) throws Exception {
          // Point #1
          final String command = args[0];
@@ -408,13 +408,13 @@ public class Client {
          YarnClient yarnClient = YarnClient.createYarnClient();
          yarnClient.init(conf);
          yarnClient.start();
-         
+
          // Point #2
          System.out.println("Requesting ResourceManager for a new
          Application");
          YarnClientApplication app =
          yarnClient.createApplication();
-         
+
          // Point #3
          System.out.println("Initializing ContainerLaunchContext
          for ApplicationMaster container");
@@ -428,7 +428,7 @@ public class Client {
          appMasterJar.setTimestamp(jarStat.getModificationTime());
          appMasterJar.setType(LocalResourceType.FILE);
          appMasterJar.setVisibility(LocalResourceVisibility.PUBLIC);
-         
+
          // Point #4
          System.out.println("Setting environment");
          Map<String, String> appMasterEnv = new HashMap<String, String>();
@@ -534,8 +534,8 @@ YarnClientApplication app = yarnClient.createApplication();
     * **启动ApplicationMaster服务的命令**：在本例中，ApplicationMaster是一个Java程序，因此，客户端需要定义一个Java的jar命令去启动ApplicationMaster。  
     ```java
       amContainer.setCommands(Collections.singletonList("$JAVA_HOME/bin/java" + " –Xmx256M"
-      + " com.packt.firstyarnapp.ApplicationMaster" + " " + command 
-      + " " + String.valueOf(n) + " 1>" 
+      + " com.packt.firstyarnapp.ApplicationMaster" + " " + command
+      + " " + String.valueOf(n) + " 1>"
       + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2>"
       + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr" ));
       amContainer.setLocalResources(Collections.singletonMap("firstyarn-app.jar",appMasterJar));
@@ -565,7 +565,7 @@ YarnClientApplication app = yarnClient.createApplication();
       appState = appReport.getYarnApplicationState();
    }
 ```  
-    
+
 #### Step 3-导出项目并且复制资源  
 你需要将Java项目导出为jar文件，并且将jar文件上传到HDFS上。如果你创建为Client.java和ApplicationMaster.java创建了两个不同的项目，那么你需要将两个项目都导出jar文件，并且将ApplicationMaster jar文件上传到HDFS上。在这个案例中，你仅仅只需要创建一个jar文件。为了复制文件到HDFS上，你可以使用Hadoop中的hdfs命令，要么使用put选项要么使用copyFromLocal选项。假如jar文件的名字是first-yarn-app.jar，那么hdfs命令应该像这样：  
 ```shell
@@ -602,7 +602,7 @@ application_1436101688138_0009
 Application completed successfully
 ```  
 程序的输出将会展示在终端。你也可以在ResourceManager web UI上查看被提交应用的状态。就像下面截图所展示的一样：  
-![Image](/Images/ownyarnapp.png)  
+![Image](/Learning YARN/Images/ownyarnapp.png)  
 
 提示：编写一个完整的YARN兼容的分布式应用是一个非常复杂的任务并且它不允许开发者去关注业务逻辑。一个开发者/管理员也需要去监控和管理运行的应用。Apache Slider和Apache Twill是两个当前正在孵化状态的项目，这两个项目目的是为了减少在YARN上编写应用的复杂性和更简单的与YARN进行集成。想要阅读更多有关这些框架的信息，可以参考它们的官方文档http://slider.incubator.apache.org/和http://twill.incubator.apache.org。  
 
