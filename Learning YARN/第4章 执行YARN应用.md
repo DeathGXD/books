@@ -100,9 +100,8 @@ YARN的初始页面包含了集群度量的一个概要和集群中所有应用�
 ```shell
 ps aux | grep <processID>
 ```  
-
 #### 跟踪应用详情  
-ResourceManager的web接口在http://<RMHost>:<WebPort>或者http://<RMHost>:<WebPort>/cluster/apps/<application_id>提供了应用的具体细节。  
+ResourceManager的web接口在http://&lt;RMHost&gt;:&lt;WebPort&gt; 或者 http://&lt;RMHost&gt;:&lt;WebPort&gt;/cluster/apps/&lt;application_id&gt; 提供了应用的具体细节。  
 
 ResourceManager的web接口提供了关于那些提交到YARN集群上应用的通用的信息。如下图所示：  
 ![image](/Images/application-information.png)  
@@ -116,16 +115,16 @@ ApplicationMaster是一个应用的第一个container。每个应用框架都会
 MRApplicationMaster对于MapReduce应用来说是作为一个Java进程运行。进程的名字叫做MRAppMaster。类似于RunJar进程，你可以在正在运行MRApplicationMaster服务的节点上执行jps或者ps aux命令来查看MRApplicationMaster服务。  
 
 #### 集群节点信息  
-ResourceManager的web接口在http://<RMHost>:<WebPort>/cluster/nodes提供了节点列表信息。如下图所示：  
+ResourceManager的web接口在http://&lt;RMHost&gt;:&lt;WebPort&gt;/cluster/nodes提供了节点列表信息。如下图所示：  
 ![image](/Images/yarn-node-information.png)  
 
 它提供了NodeManager节点的列表。节点的元数据，包括机架名称，当前状态，RPC和HTTP地址，节点容量。它同样也会提供类似于应用列表页面上可用度量的集群度量信息。你可能发现节点的使用随着任务的进展会被更新。  
 
 #### 节点的container列表  
-所有的NodeManager进程提供了一个web接口用来监控运行在该节点上的container。NodeManager的web接口地址是http://<NMHost>:<WebPort>/node。NodeManager的web接口默认端口号是8042，如下图所示：  
+所有的NodeManager进程提供了一个web接口用来监控运行在该节点上的container。NodeManager的web接口地址是http://&lt;NMHost&gt;:&lt;WebPort&gt;/node。NodeManager的web接口默认端口号是8042，如下图所示：  
 ![image](/Images/allcontainer-information.png)  
 
-一个NodeManager节点上当前正在运行的所有container的具体细节在http://<NMHost>:<WebPort>或者http://<NMHost>:<WebPort>/node/allContainers上可以看到。  
+一个NodeManager节点上当前正在运行的所有container的具体细节在http://&lt;NMHost&gt;:&lt;WebPort&gt; 或者 http://&lt;NMHost&gt;:&lt;WebPort&gt;/node/allContainers 上可以看到。  
 
 它提供了container的当前状态和一个container生成的日志文件的连接。  
 
