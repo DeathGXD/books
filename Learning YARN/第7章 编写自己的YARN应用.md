@@ -91,7 +91,7 @@ ContainerLaunchContext对象包含下面的信息：
 
 #### 通信协议  
 YARN API包含4种通信协议用来与YARN客户端进行交互和ApplicationMaster与YARN服务进行交互，比如：ResourceManager、NodeManager和Timeline Server。这些协议都被定义在org.apache.hadoop.yarn.api包中。本节给这些接口和它们的用法一个简答的介绍：  
-![image](/Learning YARN/Images/yarn-communication-protocol.PNG)  
+![image](/Images/YARN/yarn-communication-protocol.PNG)  
 
 ##### ApplicationClientProtocol  
 ApplicationClientProtocol接口定义客户端与ResourceManager服务之间的通信协议。  
@@ -136,7 +136,7 @@ YARN框架可以灵活的在集群环境中运行任何应用。应用可以像�
 在本节中，你将会编写你自己的通过YARN运行在分布式环境中的应用。  
 
 完整的程序可以概括为4个步骤，就如下面图中所示：  
-![image](/Learning YARN/Images/create-yarn-app-step.PNG)
+![image](/Images/YARN/create-yarn-app-step.PNG)
 
 #### Step 1-创建一个新的项目并且添加Hadoop-YARN JAR文件  
 我们将会在用Eclipse创建一个新的Java项目，并且使用YARN client API写一个简单的YARN application。你要么创建一个简单的Java项目，要么创建一个Maven项目。  
@@ -602,7 +602,7 @@ application_1436101688138_0009
 Application completed successfully
 ```  
 程序的输出将会展示在终端。你也可以在ResourceManager web UI上查看被提交应用的状态。就像下面截图所展示的一样：  
-![Image](/Learning YARN/Images/ownyarnapp.png)  
+![Image](/Images/YARN/ownyarnapp.png)  
 
 提示：编写一个完整的YARN兼容的分布式应用是一个非常复杂的任务并且它不允许开发者去关注业务逻辑。一个开发者/管理员也需要去监控和管理运行的应用。Apache Slider和Apache Twill是两个当前正在孵化状态的项目，这两个项目目的是为了减少在YARN上编写应用的复杂性和更简单的与YARN进行集成。想要阅读更多有关这些框架的信息，可以参考它们的官方文档http://slider.incubator.apache.org/和http://twill.incubator.apache.org。  
 
