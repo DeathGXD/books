@@ -11,49 +11,69 @@ YARN框架由ResourceManager服务和Nodemanager服务组成。这些服务维�
 
 
 
-### ResourceManager的风景
+### ResourceManager的关注点
 作为master服务，ResourceManager服务管理着下面内容：  
 * 集群资源(集群中的节点)
 * 提交到集群上的应用
 * 应用运行的尝试次数
 * 运行在集群节点上的Containers  
 
-ResourceManager服务拥有它自己的  
+ResourceManager服务拥有它自己的关注点，是与YARN管理和YARN中应用执行相关的不同进程。下面是ResourceManager的目标：  
+* **Node**：是带有NodeManager进程的机器
+* **Application**：是被客户端提交到ResourceManager的程序
+* **Application Attempt**：与应用执行相关的attempt
+* **Container**：是运行被提交应用的业务逻辑的进程  
+
+#### 关注点 1 - Node  
+节点角度是ResourceManager管理着集群内部所有的NodeManager节点的生命周期。对于集群中的每一个，ResourceManager都会维护着一个RMNode对象。每个节点的状态和事件类型都被定义在枚举NodeState和RMNodeEventType中。  
+
+下面是涉及到枚举和类：  
+* org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode：这是一个接口，定义了一个NodeManager节点上关于可用资源的信息，比如：它的容量，已经执行的应用，正在运行的container，等等。
+* org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNodeImpl：该类被用于持续跟踪一个节点上正在运行的应用/container和定义节点状态的转换。  
+* org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNodeEventType：这是一个枚举，定义节点中不同的事件类型。
+* org.apache.hadoop.yarn.api.records.NodeState：这是一个枚举，定义了节点中不同的状态。  
+
+下面的状态转换图解释了ResourceManager对于一个节点的情形：  
+![image](/Images/YARN/yarn-resourcemanager-state-update.png)  
+
+一个节点在ResourceManager中开始和最终的情形如下：  
+* 开始状态：**NEW**
+* 最终状态：**DECOMMISSION/REBOOTED/LOST**  
+
+NodeManager一旦向ResourceManager进行注册，该节点就会被标记为NEW状态。在注册成功之后，状体会被更新为RUNNING。
 
 
-#### 风景 1 - Node
+
+#### 关注点 2 - Application  
 
 
 
-#### 风景 2 - Application
+
+#### 关注点 3 - 一个应用的attempt
 
 
-
-#### 风景 3 - 一个应用的attempt
-
-
-#### 风景 4 - Container
+#### 关注点 4 - Container
 
 
-### NodeManager的风景
+### NodeManager的关注点
 
 YARN中的NodeManager服务向ResourceManager更新它的资源容量和跟踪运行在本节点上的container的执行。除了节点的健康，NodeManager服务主要负责下面的事：
 * 一个应用的执行并和与它相关的containers
 * 提供给应用相关的containers本地化执行
 * 管理不同应用的logs  
 
-NodeManager拥有它自己的风景：
+NodeManager拥有它自己的关注点：
 * Application：管理着应用的执行、日志和资源
 * Container：作为一个独立的进程管理着container的执行
 * 本地资源：包含container执行所需要的文件
 
-#### 风景 1 - Application  
+#### 关注点 1 - Application  
 
 
-#### 风景 2 - Container  
+#### 关注点 2 - Container  
 
 
-#### 风景 3 - 本地化资源  
+#### 关注点 3 - 本地化资源  
 
 
 
