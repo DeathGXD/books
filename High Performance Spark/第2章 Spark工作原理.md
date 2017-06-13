@@ -26,7 +26,7 @@ Spark提供了两种应用间资源分配方式：静态资源分配和动态资
 
 直到1.2，Spark提供了动态资源分配的选项，它扩展了静态分配的功能。在动态分配中，Spark应用根据需要可以增加和删除executor，基于一组对资源预估的启发式条件。我们将会在"分配集群资源和动态资源"中讨论资源分配。  
 
-####Spark应用  
+#### Spark应用  
 一个Spark应用相当于在driver程序中的SparkContext定义的一组job。Spark应用开始于SparkContext的启动。当Spark启动之后，一个driver和一系列executor会在集群中的worker节点上启动。每个executor有它自己的Java虚拟机(JVM)，一个executor不可能跨多个节点尽管一个节点可能包含多个executor。  
 
 SparkContext决定了每个executor可以分配多少资源。当一个Spark job被启动之后，，每个executor都会有槽位(slot)用来运行需要计算RDD的task。这样，我们可以认为一个SparkContext就是作为运行Spark job的一组配置参数。这些参数在用来创建SparkContext对象的SparkConf对象中被暴露。我们将会在Appendix A中讨论如何使用参数。
