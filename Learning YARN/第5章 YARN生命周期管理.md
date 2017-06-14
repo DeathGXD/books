@@ -33,7 +33,7 @@ ResourceManager服务拥有它自己的关注点，是与YARN管理和YARN中应
 * org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNodeEventType：这是一个枚举，定义节点中不同的事件类型。
 * org.apache.hadoop.yarn.api.records.NodeState：这是一个枚举，定义了节点中不同的状态。  
 
-下面的状态转换图解释了ResourceManager对于一个节点的情形：  
+下面的状态转换图说明了ResourceManager对于一个节点的关注点：  
 ![image](/Images/YARN/yarn-resourcemanager-state-update.png)  
 
 一个节点在ResourceManager中开始和最终的情形如下：  
@@ -45,7 +45,16 @@ NodeManager一旦向ResourceManager进行注册，该节点就会被标记为NEW
 
 
 #### 关注点 2 - Application  
+ResourceManager在application中的关注点表示在YARN集群上执行的应用运行期间的生命周期的管理。在之前的章节，我们讨论了应用执行的不同阶段。本节，我们将会对ResourceManager如何管理应用的生命周期给出一个更详细的说明。  
 
+这里是一系列涉及到的枚举和类：  
+* org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMApp：这是一个ResourceManager中应用程序的接口
+* org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppImpl：这是一个被用于访问应用状态/报告的各种更新和定义应用中状态转换
+* org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEventType：这是一个定义了一个应用中不同事件类型的枚举
+* org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState：这是一个定义了一个应用中不同状态的枚举  
+
+下面的状态转换图说明了ResourceManager对于一个应用的关注点：
+![image](/Images/YARN/yarn-resourcemanager-application-view.png)
 
 
 
