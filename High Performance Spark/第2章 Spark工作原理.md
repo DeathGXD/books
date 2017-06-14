@@ -18,7 +18,7 @@ Spark提供了一个高级别的查询语言来处理数据。Spark Core，Spark
 Spark允许用户  
 
 
-### Spark任务调度  
+### Spark任务调度    
 一个Spark应用包含一个高级别的编写Spark逻辑的driver进程，和一个系列可以跨节点分散开来的executor进程。Spark程序自己运行在driver所在的节点上并且发送一些指令到executor。一个Spark集群可以并发的运行多个Spark应用。Spark应用通过集群管理器(cluster manager)进行调度，相当于一个SparkContext。Spark应用可以依次运行多个并发的job。job相当于给定的应用中的RDD上执行action操作。本节中，我们将会描述Spark应用和它是如何运行Spark job：计算RDD转换(transformation)的过程。  
 
 #### 应用间资源分配  
@@ -29,6 +29,10 @@ Spark提供了两种应用间资源分配方式：静态资源分配和动态资
 #### Spark应用  
 一个Spark应用相当于在driver程序中的SparkContext定义的一组job。Spark应用开始于SparkContext的启动。当Spark启动之后，一个driver和一系列executor会在集群中的worker节点上启动。每个executor有它自己的Java虚拟机(JVM)，一个executor不可能跨多个节点尽管一个节点可能包含多个executor。  
 
-SparkContext决定了每个executor可以分配多少资源。当一个Spark job被启动之后，，每个executor都会有槽位(slot)用来运行需要计算RDD的task。这样，我们可以认为一个SparkContext就是作为运行Spark job的一组配置参数。这些参数在用来创建SparkContext对象的SparkConf对象中被暴露。我们将会在Appendix A中讨论如何使用参数。
+SparkContext决定了每个executor可以分配多少资源。当一个Spark job被启动之后，，每个executor都会有槽位(slot)用来运行需要计算RDD的task。这样，我们可以认为一个SparkContext就是作为运行Spark job的一组配置参数。这些参数在用来创建SparkContext对象的SparkConf对象中被暴露。我们将会在Appendix A中讨论如何使用参数。应用经常被认为是用户，但不是总是那么认为。意思是，每一个运行在你的集群上的Spark程序都可能使用一个SparkContext。  
+
+注意：RDD不能够在应用之间共享。因此转换操作(transformation)，比如join，在使用多于一个RDD的时候必须使用相同的SparkContext。  
+
+图2.4解释说明了当我们启动一个Spark时发生了什么。首先，driver程序会与cluster manager进行通信。
 
 ### Spark任务剖析  
