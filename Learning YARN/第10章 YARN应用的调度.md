@@ -23,4 +23,25 @@ Hadoop-YARN集群有下面列举出来的两个预先定义好的调度器：
 想要配置和使用调度器，管理员首先需要定义队列。在我们深入讨论这么调度器的细节之前，我们首先会学习学习一些队列的概念以及YARN中定义的不同类型的队列。  
 
 ### 初识队列  
-对于提交到YARN集群上的应用来说，队列就相当于是数据结构或者说是占位符。队列是提交到YARN集群上的应用的逻辑分组。应用总是会被提交到队列中。
+对于提交到YARN集群上的应用来说，队列就相当于是数据结构或者说是占位符。队列是提交到YARN集群上的应用的逻辑分组。应用总是会被提交到队列中。调度器依据正确的参数对应用进行出列然后分配资源和启动应用并执行。  
+
+队列基本的结构使用接口org.apache.hadoop.yarn.server.resourcemanager.scheduler.Queue进行定义，如下图所示：  
+![image](/Images/YARN/yarn-queue-structure.png)  
+一个队列对象包含下面一些信息：  
+* **队列名称**：这是分配给队列的名称。假如是分层队列，那么队列完整的路径名就是带有父队列名的名称。稍后我们将会详细讨论分层队列。
+* **队列信息**：YARN定义了一个抽象的类QueueInfo用来存储与队列有关的信息。它被定义在org.apache.hadoop.yarn.api.records包中。QueueInfo包含下面一些信息：  
+    * 队列名称
+    * 配置后的队列容量
+    * 队列的最大容量
+    * 队列的当前容量
+    * 子队列
+    * 正在运行的应用列表
+    * 队列的QueueState  
+
+队列的容量是一个浮动的值，表示的是分配给一个独立的队列内存大小。一个队列也可能包含一系列子队列(分层队列)。RUNNING和STOPPED是YARN中定义的两种队列状态。当一个队列处于STOPPED状态时，它将不会接受新的应用的提交。  
+* 队列度量：QueueMetrics类被定义在org.apache.hadoop.yarn.server.esourcemanager.scheduler包中。它包含了对一个特定队列中的应用、container和用户的统计。
+* 队列访问控制列表：队列访问控制列表是一个定义了用户和组对一个特定队列权限的机制。意思是你可以定义一个被允许提交应用到队列上的用户或者是组的列表。想要了解更多细节，你可以参考第11章 启用YARN安全策略。  
+
+你可以通过ResourceManager Web接口或者ResourceManager中关于调度器的REST API查看队列的列表和它们的属性。更多关于ResourceManager REST API的信息，你可以参考Hadoop的文档 http://hadoop.apache.org/docs/r2.6.0/hadoopyarn/hadoop-yarn-site/ResourceManagerRest.html#Cluster_Scheduler_API 。  
+
+### 队列类型  
