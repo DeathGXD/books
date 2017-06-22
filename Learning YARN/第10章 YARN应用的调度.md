@@ -58,7 +58,36 @@ CSQueue是一个继承自Queue接口的接口。它被定义在org.apache.hadoop
 与CapacityScheduler队列相关联的属性如下：  
 * yarn.scheduler.capacity.<queue-path>.capacity：一个浮点值，以百分比(%)的形式给一个队列指定容量大小。对于每一级队列来说(分层队列)，所有队列的容量之和必须等于100。为了实现应用弹性和集群的高效性，应用可能会消耗比定义的容量更多的资源。
 * yarn.scheduler.capacity.<queue-path>.maximum-capacity：一个浮点值，以百分比的形式指定队列的最大容量。这个属性是用来限制队列能够使用的最大容量。默认情况下，该值的初始值为-1，这意味着没有限制，就是说集群资源可用，那么队列可以使用100%的资源。
-* yarn.scheduler.capacity.<queue-path>.minimum-user-limit-percent：一个整型值，以百分比的形式指定每个用户在队列中最小的容量限制。当有多个用户在使用同一个队列时，这个属性保证了用户在共享的环境下可以获得最小百分比的集群资源。
+* yarn.scheduler.capacity.<queue-path>.minimum-user-limit-percent：一个整型值，以百分比的形式指定每个用户在队列中最小的容量限制。当有多个用户在使用同一个队列时，这个属性保证了用户在共享的环境下可以获得最小百分比的集群资源。该属性的默认值是100，意思就是对用户没有强制性限制。假设，如果管理员将该属性值设置为20，并且只有三个用户提交应用到YARN集群上，那么分配给用户的最大的资源就是33%。然而，如果5个甚至更多的用户向YARN集群上提交应用，那么每个用户将会最少分配20%的资源，并且如果集群中没有可用资源，那么应用将会进入等待状态。
+* yarn.scheduler.capacity.<queue-path>.user-limit-factor：一个浮点值，指定了一个额外的值为了允许用户获得更多的集群资源。比如，如果该值设置为1.5，并且配置的队列容量是40%，那么用户可以在这个队列中获得(1.5*40%)的集群资源。默认值是1，保证用户仅仅可以消耗配置的集群容量。
+* yarn.scheduler.capacity.<queue-path>.maximum-applications：一个整型值，指定一个队列最大可以接受的应用数量。一个已经被容纳的应用指的是应用处于正在运行的状态或者应用处于等待状态(应用正在等待资源的分配但是已经分配了队列)。当达到这个限制时，那么新的应用提交将会被拒绝。
+* yarn.scheduler.capacity.<queue-path>.maximum-am-resource-percent：一个浮点值，指定ApplicationMaster服务可以使用的最大资源容量的百分比。
+* yarn.scheduler.capacity.<queue-path>.state：该属性是用来设置队列的状态。一个队列要么是RUNNING状态要么是STOPPED状态。如果一个队列处于STOPPED状态，那么一个新应用的向该队列或者其子队列的提交请求将会被拒绝。  
 
+你可以参考CSQueue接口的Java代码 http://grepcode.com/file/repo1.maven.org/maven2/org.apache.hadoop/hadoop-yarn-serverresourcemanager/2.5.1/org/apache/hadoop/yarn/server/resourcemanager/scheduler/capacity/CSQueue.java?av=h#CSQueue 。  
 
 #### 公平调度器队列(FSQueue)  
+FSQueue是定义在org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair包中的一个抽象类。它实现了Queue接口，表示的是在总的集群内存基础上，基于公平共享容量分配的队列的资源计算。  
+
+类似于CSQueue，FSQueue表示的是对于FairScheduler调度器的一个节点的队列结构。  
+
+下面的两个类继承了FSQueue：  
+* FSParentQueue
+* FSLeafQueue  
+
+类似于CSQueue，每个FSQueue对象都拥有下面的元素：  
+* minResources和maxResources：分配资源给一个队列的最小和最大值。该值以X mb和Y vcores的形式设置。
+* maxRunningApps：一个整型值，指定提交到一个队列中运行的或者等待的应用的最大数量。
+* maxAMShare：一个浮点值，指定ApplicationMaster服务使用资源的最大百分比。默认值是-1.0f，意思是不启用ApplicationMaster资源使用量检测。
+* weight：类似于CSQueue中的user-limit-factor，FSQueue有一个weight属性，为特定的资源指定一个额外的值，为了允许用户获得比其他队列获得更多的资源。
+* schedulingPolicy：FSQueue在队列内部使用一个调度策略分配资源。YARN定义三种调度策略，如下：对于一个队列来说默认的策略是fair。下一节我们将会详细的讨论调度策略的概念。
+    * 先进先出策略(FIFO)
+    * 公平共享策略
+    * 主导资源公平策略(Dominant Resource Fairness policy简称DRF)
+* aclSubmitApps和aclAdministerApps：定义了一个可以提交应用和杀死应用的用户或者组的列表。
+*  minSharePreemptionTimeout：在尝试从其他队列获得container资源使用之前等待的秒数。  
+
+你可以参考FSQueue接口的Java代码http://grepcode.com/file/repo1.maven.org/maven2/org.apache.hadoop/hadoop-yarn-server-resourcemanager/2.5.1/org/apache/hadoop/yarn/server/resourcemanager/scheduler/fair/FSQueue.java?av=h#FSQueue 。  
+
+### 初识调度器  
+调度器的职责是给运行的应用的不同任务提供资源。它仅仅负责任务的调度，并不关心任务状态的跟踪和任务的监控。
