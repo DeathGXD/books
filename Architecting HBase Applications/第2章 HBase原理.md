@@ -49,16 +49,17 @@ HFile是由block组成的。不要将HFile中的block和HDFS中的block混为一
 **警告**：如果你将block的大小配置的很小，它将会创建很多HFile block索引，最后将会给内存相当大的压力，并且可能会产生相反的效果。同样，因为数据将会被压缩，压缩比总是更小，数据的大小将会增长。你需要将所有的这些细节都记在脑子里，以便于决定修改默认值使用。在做出决定性的配置修改之前，你应该使用不同的配置运行一些负载测试。然而，通常情况下，建议使用默认值。  
 
 在HFile中主要会遇见下面几种block(因为它们是内部主要的细节实现，我们将只提供一个高层次的描述；如果你想了解详细的block类型，请参考HBase源代码)：  
-**Data block**
+
+**Data block**  
 数据block包含的数据要么是压缩的，要么不是压缩，但不可能是二者的组合。数据block包含删除标记，而且包含put的数据。  
 
-**Index block**
+**Index block**  
 当要查看特定的行，HBase通过索引block快速的在HFile中定位正确的位置。  
 
-**Bloom filter block**
+**Bloom filter block**  
 这些block被用于存储布隆过滤器索引相关的信息。当查找特定的key时，布隆过滤器block被用于跳过文件的语法分析。  
 
-**Trailer block**
+**Trailer block**  
 这种block包含HFile中其他大小可变的部分的偏移量。它也包含HFile的版本信息。  
 
 Block是按照倒叙的方式存储的。这个意味着取代索引block存储在文件的开始，其他block跟在索引block之后的方式，block将被以倒序方式写入。数据block将第一个被存储，然后是索引block，再是布隆过滤器block；最后尾部block将存储在最后。  
