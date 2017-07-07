@@ -100,3 +100,75 @@ YARN为实现可插拔的调度器提供了接口。下面两个是在Hadoop受�
 * 容量调度器  
 
 #### 公平调度器  
+
+
+
+
+
+#### 容量调度器  
+CapacityScheduler是YARN提供的另一个可插拔的调度器。它允许多个应用通过共享集群的资源一起执行，这样可以最大化集群的吞吐量。它同样对多租户和容量保证提供了支持。CapacityScheduler使用CSQueue对象进行队列的定义。CapacityScheduler的实现定义在org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler类中。  
+
+CapacityScheduler提供了下面的特性：  
+* 分层队列
+* 容量保证
+* 安全性
+* 可伸缩性
+* 多租户
+* 运行时配置
+* 消耗性应用
+* 基于资源的调度  
+想要阅读这么特性的更多内容，可以参考Hadoop文档 http://hadoop.apache.org/docs/r2.6.0/hadoop-yarn/hadoop-yarn-site/CapacityScheduler.html 。  
+
+##### 配置CapacityScheduler  
+YARN中配置CapacityScheduler就像配置FairScheduler一样简单。想要启用CapacityScheduler，你需要在yanr-site.xml配置下面的属性：  
+```xml
+<property>
+  <name>yarn.resourcemanager.scheduler.class</name>
+  <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value>
+</property>
+```  
+与FairScheduler类似，CapacityScheduler同样有一个分配文件。它与公平调度器一样是一个.xml文件但是与公平调度器的分配文件不同的文件格式。CapacityScheduler默认的分配文件是  $HADOOP_PREFIX/etc/hadoop/capacity-scheduler.xml。  
+
+CapacityScheduler中默认的父队列是root。所有用户定义的队列将会是root队列的子队列。  
+
+在下面的xml文件中为CapacityScheduler定义了三个队列——alpha、beta和default。alpha队列有两个子队列——a1和a2。在每一个层级，一个队列内部的所有容量之和应该是100%。  
+
+你可以参考下面的容量调度器的配置。你可能会发现root队列的子队列的所有容量(alpha-50，beta-30和default-20)之和和alpha队列的子队列的所有容量(a1-60和a2-40)之和都是100，正如下面的配置所示：  
+```xml
+<property>
+  <name>yarn.scheduler.capacity.root.queues</name>
+  <value>alpha,beta,default</value>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.alpha.capacity</name>
+  <value>50</value>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.alpha.queues</name>
+  <value>a1,a2</value>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.alpha.a1.capacity</name>
+  <value>60</value>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.alpha.a2.capacity</name>
+  <value>40</value>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.beta.capacity</name>
+  <value>30</value>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.default.capacity</name>
+  <value>20</value>
+</property>
+```  
+与FairScheduler类似，想要提交一个job到一个独立的队列，你需要使用-D参数指定队列名，如下所示：  
+```shell
+yarn jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.1.jar pi -Dmapreduce.job.queuename=a1 5 10
+```  
+下面的截图显示了root.alpha.a1对列在应用执行期间的状态：  
+![image](/Images/YARN/yarn-capacityscheduler-queue-state.png)  
+
+### 总结
