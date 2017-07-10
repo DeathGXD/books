@@ -3,7 +3,7 @@ YARN包含了多种高效和可扩展的组件, 使得YARN变成一个强大的�
 在本章中, 我们将会涉及到下面的主题：
 * 理解ResourceManager
 * 理解NodeManager
-* 与辅助服务协同工作、本地资源、日志聚合
+* 与辅助服务、资源本地化、日志聚合协同工作
 * Timeline服务预览、web application proxy和YARN调度负载模拟器  
 
 ### 理解ResourceManager  
@@ -15,41 +15,51 @@ ResourceManager拥有多个子组件协助它有效的管理一个多节点的�
 #### 客户端和管理接口
 ResourceManager暴露方法给client和集群管理员，用来跟ResourceManager进行RPC通信和接受管理命令的优先级。这里是两个用来跟ResourceManager进行通信的类：
 1. **ClientRMService**  
-ClientRMService类是ResourceManager的客户端接口。所有的客户端用来创建与ResouceManager的RPC连接。这个模块处理所有的ResouceManager的RPC接口。这个服务的实现被定义在org.apache.hadoop.yarn.server.resourcemanager.ClientRMService包中。客户端初始化这个服务使用客户端配置文件，比如yarn-site.xml。客户端请求ResourceManager：  
+    ClientRMService类是ResourceManager的客户端接口。所有的客户端用来创建与ResouceManager的RPC连接。这个模块处理所有的ResouceManager的RPC接口。这个服务的实现被定义在org.apache.hadoop.yarn.server.resourcemanager.ClientRMService包中。客户端初始化这个服务使用客户端配置文件，比如yarn-site.xml。  
+
+    客户端请求ResourceManager：  
     * **应用请求**：这个接口暴露了诸如创建新的application请求，提交applications到集群，杀死一个application，列出containers，应用attempt记录等服务给客户端。  
     * **集群度量**：客户端也可以使用这个服务请求ResourceManager分享集群的度量，节点的容量，调度的细节等等信息。  
     * **安全**：为了连接到一个安全的集群环境，客户端需要使用ResourceManager提供的授权令牌和访问控制列表。  
-```xml
-想要阅读更多有关定义在ClientRMService的不同方法，你可以参考grepcode的网站地http://grepcode.com/file/repo1.maven.org/maven2/org.apache.hadoop/hadoop-yarnserver-resourcemanager/2.6.0/org/apache/hadoop/yarn/server/resourcemanager/ClientRMService.java
-```  
+
+    提示：想要阅读更多有关定义在ClientRMService的不同方法，你可以参考grepcode的网站地http://grepcode.com/file/repo1.maven.org/maven2/org.apache.hadoop/hadoop-yarnserver-resourcemanager/2.6.0/org/apache/hadoop/yarn/server/resourcemanager/ClientRMService.java  
+
 2. **AdminService**  
-AdminService类被集群管理员用来管理ResourceManager服务。集群管理员在使用命令行选项rmadmin命令的时候，内部使用的就是AdminService。
-下面列出了集群管理员通过AdminService可以执行的一些操作：  
-<<<<<<< HEAD
+    AdminService类被集群管理员用来管理ResourceManager服务。集群管理员在使用命令行选项rmadmin命令的时候，内部使用的就是AdminService。  
+
+    下面列出了集群管理员通过AdminService可以执行的一些操作：  
     * 刷新集群的节点、访问控制列表和队列  
     * 检查集群的健康状态  
     * 管理ResourceManager的高可用  
 
-这个服务的实现被定义在org.apache.hadoop.yarn. server.resourcemanager.AdminService包中。  
+  这个服务的实现被定义在org.apache.hadoop.yarn.server.resourcemanager.AdminService包中。  
 
-你可以参看rmadmin命令，在第3章 管理一个YARN集群。
-
-#### 核心接口
-ResourceManager的核心包扩scheduler和application manager。
-=======
-    * **刷新集群的节点、访问控制列表和队列**  
-    * **检查集群的健康状态**  
-    * **管理ResourceManager的高可用**  
+ 你可以参看rmadmin命令，在第3章 管理一个YARN集群。  
 
 #### 核心接口
-ResourceManager的核心包含调度和应用的管理。下面的类中定义了ResourceManager如何执行任务的调度、应用的管理和状态信息的管理。  
+ResourceManager的核心组件包含调度器和应用的管理。下面的类中定义了ResourceManager如何执行任务的调度、应用的管理和状态信息的管理。  
 1. YarnScheduler  
-YarnScheduler负责资源的分配  
+    YarnScheduler类负责在多个应用之间分配资源和回收资源，那意味着集群中跨多个节点的应用调度是基于一些预先定义的说明。YarnScheduler是一个基于可插拔策略的插件。这个插件负责在多个应用之间，多个队列之间，等等，进行集群资源(CPU，内存，磁盘等等)的分割。它为被调起的应用维护了一个队列，并且有集群资源所具有的信息，比如，集群中节点数，最大和最小的资源容量，等等。YarnScheduler定义在org.apache.hadoop.yarn.server.resourcemanager.scheduler.YarnScheduler接口中，YarnScheduler支持MapReduce的两个可用的实现是：  
+    * FairScheduler
+    * CapacityScheduler  
+    关于调度器和调度器配置更详尽的说明在第10章 YARN应用的调度。  
 
 2. RMAppManager  
->>>>>>> origin/master
+    RMAppManager负责为ResourceManager管理在YARN集群上执行的应用列表。它是作为ResourceManager内部的一个服务运行。它创建并且记录ApplicationSummary，那是与每个应用相关的运行时信息。YARN客户端连接到这个服务可以请求任何与应用相关的信息。  
+
+    这个服务的实现定义在org.apache.hadoop.yarn.server.resourcemanager.RMAppManager类中。  
 
 3. RMStateStore  
+    处理ResourceManager在故障期间的恢复，RMStateStore是一个抽象实现，用来存储ResourceManager服务的状态信息。它也存储与正在运行的应用相关的信息和它们的attempt。  
+
+    当前，YARN定义了四种存储ResourceManager状态的机制：  
+    * FileSystemRMStateStore
+    * MemoryRMStateStore
+    * ZKRMStateStore
+    * NullRMStateStore  
+
+
+
 
 4. SchedulingMonitor  
 
