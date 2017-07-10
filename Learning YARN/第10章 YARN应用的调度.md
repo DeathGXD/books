@@ -141,15 +141,81 @@ FSQueue使用一个调度策略在队列内部分配资源。YARN定义了三种
 FIFO策略简单并且容易实现。它意味着先被提交的应用将会获取更多的资源。  
 
 公平共享策略是FSQueue默认调度策略。对于公平地共享资源来说有三个规则：  
-* 
+* **NEED TO DO**
+* **NEED TO DO**
+* **NEED TO DO**  
 
+##### 配置一个公平调度器  
+在本节，我们将会讨论一下配置一个公平调度器的必要步骤。在YARN中，公平调度器的实现被定义在org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler类中。想要配置ResourceManager使用公平调度器，你需要在yarn-site.xml文件中使用下面的属性指定类名：  
+```xml
+<property>
+  <name>yarn.resourcemanager.scheduler.class</name>
+  <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler</value>
+</property>
+```  
+你也可以在yarn-site.xml文件中配置下面的FairScheduler参数：  
 
-##### 配置一个公平调度器
+属性                                      | bird
+-----------------------------------------|--------------------------------------------------------
+yarn.scheduler.fair.allocation.file | 一个包含FSQueue定义和属性的xml文件的路径  
+yarn.scheduler.fair.useras-default-queue | 如果没有指定队列名，那么使用用户名作为默认的队列名  
+yarn.scheduler.fair.preemption | 如果资源抢占需要被开启，设置为true
+yarn.scheduler.fair.preemption.clusterutilization-threshold | 资源抢占中资源利用的临界值，默认是0.8f
+yarn.scheduler.fair.sizebasedweight |　这是所有应用程序不论其大小的加权共享或等额共享
+yarn.scheduler.fair.update-interval-ms　| 以毫秒的形式计算公平共享，资源需求和资源抢占的请。默认是500ms  
 
+除了在yarn-site.xml文件中配置外，你还需要一个分配文件。分配文件是一个.xml文件，包好了一个FSQueue的定义和它的属性。一个FairScheduler分配文件的样本如下：  
+```xml
+<?xml version="1.0"?>
+<allocations>
+  <queue name="queue1" type="parent">
+    <minResources>100 mb,1 vcores</minResources>
+    <maxResources>8000 mb,8 vcores</maxResources>
+    <maxRunningApps>50</maxRunningApps>
+    <queue name="sub_queue1">
+      <minResources>100 mb,1 vcores</minResources>
+    </queue>
+  </queue>
+  <queue name="queue2">
+    <minResources>1000 mb,1 vcores</minResources>
+    <maxResources>6000 mb,5 vcores</maxResources>
+    <maxRunningApps>40</maxRunningApps>
+    <maxAMShare>0.2</maxAMShare>
+    <schedulingPolicy>fifo</schedulingPolicy>
+    <weight>1.5</weight>
+    <schedulingPolicy>fair</schedulingPolicy>
+  </queue>
+  <queueMaxAMShareDefault>1.0</queueMaxAMShareDefault>
+  <userMaxAppsDefault>5</userMaxAppsDefault>
+</allocations>
+```  
+你可以将文件保存在Hadoop配置文件夹下，名为fair-scheduler.xml。你需要在yarn-site.xml文件中使用下面的属性指定该文件的路径：  
+```xml
+<property>
+  <name>yarn.scheduler.fair.allocation.file</name>
+  <value>/home/hduser/hadoop-2.5.1/etc/Hadoop/fair-scheduler.xml</value>
+</property>
+```  
+文件中可能也会包含如下与FairScheduler相关的配置：  
+* UserElements
+* userMaxAppsDefault
+* fairSharePreemptionTimeout
+* defaultMinSharePreemptionTimeout
+* queueMaxAppsDefault
+* queueMaxAMShareDefault
+* defaultQueueSchedulingPolicy
+* queuePlacementPolicy  
 
+提示：想要更深入的阅读与分配文件相关的配置参数，你可以参考FairScheduler的文档 http://hadoop.apache.org/docs/r2.5.1/hadoop-yarn/hadoop-yarn-site/FairScheduler.html#Configuration 。  
 
+在配置完yarn-site.xml文件和分配文件之后，你将需要重新启动ResourceManager服务。想要提交一个job到一个队列，你需要在提交的job的时候，使用-D参数指定队列名。提交一个job到sub_queue1队列的模板如下：  
+```shell
+yarn jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.1.jar pi -Dmapreduce.job.queuename=root.queue1.sub_queue1 2 5
+```  
+想要查看队列的状态，你可以通过ResourceManager的Web UI查看调度器页面 http://&lt;ResourceManagerIP&gt;:8088/cluster/scheduler?openQueues=root.queue1#root.queue1.sub_queue1 。  
 
-
+下面的截图显示了root.queue1.sub_queue1对列的状态：  
+![image](/Images/YARN/yarn-fairscheduler-stats.png)  
 
 #### 容量调度器  
 CapacityScheduler是YARN提供的另一个可插拔的调度器。它允许多个应用通过共享集群的资源一起执行，这样可以最大化集群的吞吐量。它同样对多租户和容量保证提供了支持。CapacityScheduler使用CSQueue对象进行队列的定义。CapacityScheduler的实现定义在org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler类中。  
