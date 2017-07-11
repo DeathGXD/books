@@ -58,21 +58,49 @@ ResourceManager的核心组件包含调度器和应用的管理。下面的类�
     * ZKRMStateStore
     * NullRMStateStore  
 
-
-
+ZKRMStateStore是最可靠的和被推荐的存储RMState的机制，但是它需要一个Zookeeper作为Znode共同存储信息。ResourceManager的状态存储机制在配置ResourceManager高可用(HA)时同样也会被用到。更多状态存储相关的内容，你可以参考在第3章，管理一个Hadoop-YARN集群中的ResourceManager高可用中的状态存储配置。  
 
 4. SchedulingMonitor  
+这个接口提供了对container的监控和编辑一个定期调度的规定。它同样提供了一个调整资源监控监控的规定和定义SchedulingEditPolicy的规定。想要阅读更多有关SchedulingMonitor的内容，你可以org.apache.hadoop.yarn.server.resourcemanager.monitor.SchedulingMonitor类。  
 
 #### NodeManager接口
 ResourceManager与NodeManager进行通信。NodeManager会定期向ResourceManager汇报NodeManager节点的健康和资源信息。下面是一些ResourceManager用来管理集群中所有NodeManager节点的类：  
 1. NMLivelinessMonitor  
+    NMLivelinessMonitor帮助ResourceManager持续追踪集群中所有活着的NodeManager节点，更重要的是，它是系统中最与众不同的。它频繁从所有的NodeManager节点接受心跳信息，如果在600000毫秒或者10分钟(默认)内没有收到一个节点的任何心跳信息，那么它会认为这个节点宕机了。这个时间间隔可以通过YARN配置属性中的RM_NM_EXPIRY_INTERVAL_MS进行配置。当一个节点被标记为宕机时，所有正在运行在那个节点上的container都会被认为是失败的并且不会再有新的container被调用在那台节点上。ResourceManager会为那台宕机节点上运行的container重新分配资源。  
+
+    想要覆盖逾期时间间隔的默认值，管理员可以在yarn-site.xml文件配置下面的属性：  
+    ```xml
+    <property>
+      <name>yarn.am.liveness-monitor.expiry-interval-ms</name>
+      <value>600000</value>
+    </property>
+    ```  
+
+    这个服务的实现被定义在org.apache.hadoop.yarn.server.resourcemanager.NMLivelinessMonitor类中。  
 
 2. ApplicationMasterLauncher  
-
+    ApplicationMasterLauncher为提交到YARN集群上的不同应用维护了一个application master的队列。它启动一个AM作为服务，每次都会从队列中获得一个应用。它同样维护了一个启动AM的线程池，并且当应用完成时或者被强制终止时回收AM。这个服务被定义在org.apache.hadoop.yarn.server.resourcemanager.amlauncher.ApplicationMasterLauncher类中。  
 
 #### 安全和令牌管理  
+ResourceManager管理着一组令牌，用以在不同RPC通信管道之间的验证和授权。ResourceManager管理这些服务在接下来的安全机制章节中会进行解释。  
 
+1. RMAuthenticationHandler  
+    RMAuthenticationHandler的职责是基于授权头验证一个请求并且给请求返回一个有效的令牌。它继承自KerberosAuthenticationHandler类，并且当Kerheros安全机制开启时被使用。  
 
+    Kerberos是一个用于鉴定正在运行的服务的标识符的认证协议并且在不同的节点之间的不安全网络中进行通信。Kerberos的概述以及YARN中Kerberos的配置将会在第11章 启用YARN安全机制中被提及。想要阅读更多有关这个服务的内容，你可以参考org.apache.hadoop.yarn.server.resourcemanager.security.RMAuthenticationHandler包。  
+
+2. QueueACLsManager  
+    YarnScheduler使用QueueACLsManager类检测是否一个用户访问了一个特定的队列。如果ACLs没有被开启，那么将会允许所有用户提交应用到所有队列。关于队列和队列ACLs的更深入的说明在第10章 YARN应用的调度和第11章 YARN中启用安全机制中被给出。  
+
+3. TokenSecretManagers for RM  
+    ResourceManager定义TokenSecretManagers为了管理跨多个应用，container和节点之间的安全。  
+
+    几个TokenSecretManagers是：  
+    * AMRMTokenSecretManager
+    * ClientToAMTokenSecretManagerInRM
+    * NMTokenSecretManagerInRM
+    * RMContainerTokenSecretManager
+    * RMDelegationTokenSecretManager  
 
 ### 理解NodeManager  
 NodeManager节点是YARN的工作节点，负责向ResourceManager更新一个节点上的可用资源。它同样也负责健康一个节点的健康状况和为一个应用执行container。下面展示了NodeManager进程中包含的多个子组件，接下来会对这些子组件进行详细的描述：  
@@ -81,21 +109,35 @@ NodeManager节点是YARN的工作节点，负责向ResourceManager更新一个�
 #### 状态更新
 YARN集群的可用资源是由该集群上所有的NodeManager节点上的可用资源相加而来。为了有效的利用集群资源，持续对整个集群的资源进行追踪是非常重要的。NodeManager会定期向ResourceManager发送节点资源和健康状况状态的更新。这能够让ResourceManager有效的调度应用的执行和提高集群的性能。接下来的小节中将会提到一些NodeManager中定义的用来发送更新的类。  
 1. NodeStatusUpdater  
-每个带有NodeManager进程的子节点都会向ResourceManager进行注册。NodeManager向ResourceManager指定它的可用资源。它有一个StatusUpdater服务，用来更新运行在它上面的应用和container相关的当前状态。NodeManager依据下面几个方面计算可用资源：  
+    每个带有NodeManager进程的子节点都会向ResourceManager进行注册。NodeManager向ResourceManager指定它的可用资源。它有一个StatusUpdater服务，用来更新运行在它上面的应用和container相关的当前状态。NodeManager依据下面几个方面计算可用资源：  
     * 物理内存
     * 虚拟内存和物理内存的比例
     * CPU核数
     * 已停止的containers的持续时间  
 
-    它对外暴露了公共的接口用来请求和更新container当前的状态。该服务的实现被定义org.apache.hadoop.yarn.server.nodemanger.NodeStatusUpdaterImpl.
+    它对外暴露了公共的接口用来请求和更新container当前的状态。该服务的实现被定义org.apache.hadoop.yarn.server.nodemanger.NodeStatusUpdaterImpl.  
 
-2. NodeManagerMetrics
-NodeManager进程管理着其所在节点上的可用资源的度量。它存储节点上原始的度量信息，并且以不同的事件更新每个container的度量，比如：container启动，完成，killed，等等。然而当前的资源度量仅仅考虑内存和CPU核数。这个服务的实现被定义在org.apache.hadoop.yarn.server.nodemanager.metrics.NodeManagerMetrics.
+2. NodeManagerMetrics  
+    NodeManager进程管理着其所在节点上的可用资源的度量。它存储节点上原始的度量信息，并且以不同的事件更新每个container的度量，比如：container启动，完成，killed，等等。然而当前的资源度量仅仅考虑内存和CPU核数。这个服务的实现被定义在org.apache.hadoop.yarn.server.nodemanager.metrics.NodeManagerMetrics.  
 
 #### 状态和健康管理
-周期性的检测集群中不同节点的健康状况是非常重要的，并且如果发现有任何节点是不健康的，应该采取必要的措施。NodeManager服务提供了工具可以在任何时间点去管理节点的状态和健康情况。
+周期性的检测集群中不同节点的健康状况是非常重要的，并且如果发现有任何节点是不健康的，应该采取必要的措施。NodeManager服务提供了工具可以在任何时间点去管理和监控节点的状态和健康情况。作为失败/故障管理和恢复的一部分，即使一个不健康的节点出现了网络中断或者直接故障了，NodeManager也会提供服务恢复该节点的资源状态并且再次积极地参与集群的运作。  
 
+1. NodeHealthCheckerService  
+    这个服务提供了NodeManager节点上当前健康状态的报告。它会在节点执行一个用户定义的脚本使用NodeHealthScriptRunner服务去监控节点的健康情况。  
 
+    脚本执行结束后会带有下面任意一种结果：  
+    * SUCCESS
+    * TIMED_OUT
+    * FAILED_WITH_EXIT_CODE
+    * FAILED_WITH_EXCEPTION
+    * FAILED  
+
+    在内部，这个服务仅仅会检测脚本的输出中是否以ERROR开始。如果在脚本执行期间，服务发现任何匹配的错误或者超时，那么它会将节点标记为不健康的并且向请求报告信息的服务发现报告。  
+
+2. NMStateStoreService  
+    NodeManager的职责是供应本地的container资源。在YARN中，提供资源的container的被称之为资源本地化。NMStateStoreService服务存储了任意时间点上NodeManager节点中本地化资源和正在使用的资源的状态。它也提供了一个用户资源的恢复状态和本地化状体的处理。  
+    
 #### Container管理
 
 
