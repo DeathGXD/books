@@ -155,14 +155,14 @@ NodeManager为了满足运行一个container和container监控的先决条件实
 4. ContainersMonitor  
     ContainerMonitor是一个监控container在节点上运行的服务。它维护了一个NodeManager需要监控的container的列表。当一个新的container在节点上启动时，ContainerMonitor会添加ContainerId和ProcessTreeInfo到列表中并且从列表中删除已经完成的container。  
 
-5. Auxiliary service  
-    Auxiliary service是一个用来定义在YARN集群上的每个节点运行应用所需要的用户自定义服务的框架。
+5. 辅助服务(Auxiliary service)  
+    辅助服务是一个用来定义在YARN集群上的每个节点运行应用所需要的用户自定义服务的框架。举一个Hadoop MapReduce任务中的一个例子，map阶段的输出被传输到reduce节点。NodeManager提供了一个处理方法为MapReduce服务检索元数据。元数据可能是在MapReduce任务执行期间，mapper和reducer之间传输map输出文件的连接信息。Hadoop提供了mapreduce_shuffle作为NodeManager的辅助服务，如下图所示：  
+    ![image](/Images/YARN/yarn-auxiliary-service.png)  
 
 6. LogHandler和日志聚合  
+    LogHandler是一个记录应用日志和container日志的可插拔实现。非聚集日志是在YARN上执行的应用生成在本地文件系统的日志。这些日志将会在配置的保存时间后被删除，默认是3小时，可以通过NM_LOG_RETAIN_SECONDS属性进行设置。  
 
-
-
-
+    YARN提供了一个选项去聚集一个应用在不同NodeManager节点上生成的container日志到一个集中的地方。LogAggregationService作为NodeManager的ContainerManager组件实现的一部分，为运行在YARN集群上的每个应用运行聚合器，将NodeManager节点上的日志推到HDFS上。  
 
 #### 安全和令牌管理
 
