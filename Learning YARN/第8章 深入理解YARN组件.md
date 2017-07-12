@@ -137,8 +137,30 @@ YARN集群的可用资源是由该集群上所有的NodeManager节点上的可�
 
 2. NMStateStoreService  
     NodeManager的职责是供应本地的container资源。在YARN中，提供资源的container的被称之为资源本地化。NMStateStoreService服务存储了任意时间点上NodeManager节点中本地化资源和正在使用的资源的状态。它也提供了一个用户资源的恢复状态和本地化状体的处理。  
-    
-#### Container管理
+
+#### Container管理  
+NodeManager为了满足运行一个container和container监控的先决条件实现了不同的服务。比如，一个container为了自己的执行可能需要下载额外的资源或者需要任何辅助的服务。在接下来的小节中对NodeManager为了container的管理管理的各种不同的服务提供了一个更详细的说明：  
+
+1. ContainerExecutor  
+    这是一个NodeManager的提供的一个接口，负责满足container运行的先决条件，包括，资源的本地化，container目录的创建(用户和应用指定的目录和缓存)和最终执行请求的container。它同样可以方便的杀死一个container，检查一个container是否存活和发送信号给一个container。  
+
+2. ResourceLocalizationService  
+    NodeManager实例化ResourceLocalizationService是为了确保container运行应用的任务所需要的资源的位置。ResourceLocalizationService会将资源下载到一个应用运行所对应的NodeManager的本地文件系统中。Container使用这些资源用于应用的执行。当container执行完成后，ResourceLocalizationService会将下载的资源从磁盘中清理掉。  
+
+3. ContainersLauncher  
+    ContainerLauncher服务负责在节点上启动container。这个服务只能够在ResourceLocalizationService在本地文件系统创建目录和下载任何container所需要的资源之后才能启动。这个服务一个接着一个启动container。它接受下面两个其中之一的ContainersLauncherEvent：  
+    * LAUNCH_CONTAINER：如果事件类型是launch_container，那么ContainerLauncher服务会使用ExecuterService启动container。
+    * CLEANUP_CONTAINER：如果事件类型是cleanup_container，那么ContainerLauncher服务会发送信号去杀死container进程并且回收container在本地磁盘的文件目录。  
+
+4. ContainersMonitor  
+    ContainerMonitor是一个监控container在节点上运行的服务。它维护了一个NodeManager需要监控的container的列表。当一个新的container在节点上启动时，ContainerMonitor会添加ContainerId和ProcessTreeInfo到列表中并且从列表中删除已经完成的container。  
+
+5. Auxiliary service  
+    Auxiliary service是一个用来定义在YARN集群上的每个节点运行应用所需要的用户自定义服务的框架。
+
+6. LogHandler和日志聚合  
+
+
 
 
 
