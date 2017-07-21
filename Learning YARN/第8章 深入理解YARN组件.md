@@ -164,16 +164,27 @@ NodeManager为了满足运行一个container和container监控的先决条件实
 
     YARN提供了一个选项去聚集一个应用在不同NodeManager节点上生成的container日志到一个集中的地方。LogAggregationService作为NodeManager的ContainerManager组件实现的一部分，为运行在YARN集群上的每个应用运行聚合器，将NodeManager节点上的日志推到HDFS上。  
 
-#### 安全和令牌管理
-
-
+#### 安全和令牌管理器  
+NodeManager管理着下面的安全服务：  
+* NMTokenSecretManagerInNM：这个服务管理着身份验证的key和NodeManager节点和准备运行在NodeManager节点上的应用之间的验证。
+* NMContainerTokenSecretManager：这个服务管理和验证NodeManager节点上运行的container。它会检查container中的key在ResourceManager中是否有相同的key；在验证成功之后，它会允许container运行在NodeManager节点上。  
 
 ### YARN Timeline服务  
+它会持续保存在YARN集群上当前正在执行的和历史的应用的信息。它会执行下面两个重要的任务：  
+* 关于已经完成的引用的一般信息。它为一个应用提供了下面的一些信息：  
+    * 队列名
+    * 用户信息
+    * 应用attempts
+    * 为每个应用attempts运行的container
+    * Containers  
+* 每个正在运行的框架信息和已经完成的应用信息：  
+    * 应用或者特定框架的信息，比如一个MapReduce应用的map任务和reduce任务的数量。  
+    * 用户来自于客户端或者application master的发布信息  
 
+想要配置和启动一个YARN TimeLine服务，你可以参考第3章， 管理一个Hadoop-YARN集群。  
 
+### Web application proxy服务  
 
-
-### Web application proxy服务
 
 
 
