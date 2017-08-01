@@ -75,13 +75,57 @@ NodeManager拥有它自己的关注点：
 * Container：作为一个独立的进程管理着container的执行
 * 本地资源：包含container执行所需要的文件
 
-#### 视野 1 - Application  
+#### 关注点 1 - Application  
+NodeManager管理着应用的container的生命周期和应用执行期间使用的资源。NodeManager观察一个应用表示的是NodeManager如何管理container的执行，资源和应用的日志。  
+
+下面是设计到的一些枚举和类的列表。所有的这些类都被定义在org.apache.hadoop.yarn.server.nodemanager.containermanager.application包中。  
+* Application：这个是一个接口，对应于NodeManager上应用。它仅仅只用于存储应用的元数据。
+* ApplicationImpl：这个类定义了应用状态的转变和与之相关联的事件处理器。
+* ApplicationEventType：这是一个枚举类型，定义了一个应用的不同的事件类型。
+* ApplicationState：这是一个枚举类型，定义了一个应用的不同状态。  
+
+NodeManager服务仅仅存储了与应用相关的最基本的信息。应用元数据包括：  
+* application ID
+* NodeManager所关心的application的状态
+* 相关联的container列表
+* 用户名  
+
+下面的状态转换图说明了NodeManager对一个应用的关注点：  
+![image](/Images/YARN/yarn-application-state-change.png)  
+
+NodeManager对一个应用所关注的初始状态和最终状态如下：  
+* 初始状态：NEW
+* 最终状态：FINISHED  
+
+在一个应用执行期间，ApplicationMaster作为应用的第一个container运行。ResourceManager接受应用的请求并且为ApplicationMaster服务分配资源。在NodeManager内部的ContainerManager服务接受应用的请求并且在NodeManager节点上启动ApplicationMaster服务。  
+
+NodeManager将一个应用的状态标记为NEW，初始化应用，并且将应用的状态更改为INITING。在这一个转变过程中，日志聚集服务连同应用访问控制列表一起也会被初始化。如果在初始化应用或者创建日志目录期间出现异常，那么应用将会停留在INITING状态并且NodeManager会发送警告信息给用户。NodeManager会等待要么是Application_Inited事件要么是Finish_Application事件。  
+
+注意：如果日志聚集被开启，但是创建日志目录失败了，那么一条警告信息如Log Aggregation service failed to initialize, there will be no logs for this application将会被记录。  
+
+如果Application_Inited完成了，应用的状态将会被改为RUNNING。在应用执行期间，应用会请求并且运行一些container。诸如 Application_Container_Finished和Container_Done_Transition的事件会更新应用的container列表，但是应用的状态不会被改变。  
+
+当应用执行完成时，Finish_Application事件将会被触发。NodeManager会等待应用所有当前正在的运行的container的执行完成。应用的状态会改为Finishing Containers Wait。在所有的container完成之后，NodeManager服务会清理所有被应用所使用的资源并且为应用执行日志聚集。一旦资源清理完成，应用将会被标记为FINISHED。  
+
+#### 关注点 2 - Container  
+正如之前讨论的，NodeManager负责提供资源，container的执行，资源的清理，等等。NodeManager中一个container的生命周期被定义在org.apache.hadoop.yarn.server.nodemanager.containermanager.container包中。  
+
+下面是涉及到的一些枚举和类的列表：  
+* Container：这是一个接口，对应于NodeManager上的container。
+* ContainerImpl：这个类定义了container的状态转化和与之相关联的事件处理器。
+* ContainerEventType：这是一个枚举，定义了container中不同的事件类型。
+* ContainerState：这是一个枚举，定义了container中不同的状态。  
+
+下面的状态转化图说明了NodeManager对于一个container的关注点：  
+![image](/Images/YARN/yarn-container-state-change.png)  
+
+NodeManager对一个container所关注的初始状态和完成状态如下：  
+* 初始状态：NEW
+* 完成状态：Done  
 
 
-#### 视野 2 - Container  
 
-
-#### 视野 3 - 本地化资源  
+#### 关注点 3 - 本地化资源  
 
 
 
