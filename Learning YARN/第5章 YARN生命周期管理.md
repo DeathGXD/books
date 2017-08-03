@@ -123,11 +123,43 @@ NodeManager对一个container所关注的初始状态和完成状态如下：
 * 初始状态：NEW
 * 完成状态：Done  
 
+ResourceManager分配container到一个单独的机器上。因为container是被一个应用所需要，NodeManager会在节点初始化container对象。NodeManager会请求ResourceLocalizationManager服务去下载运行container所需要的资源并且将container的状态标记为Localizing。  
 
+对于本地化，使用的是特定的服务。辅助服务拥有container服务数据的信息。当资源被成功本地化之后，Resource_Localized事件将会被触发。如果资源成功本地化或者资源并不需要本地化，那么container将会直接进入Localized状态。如果资源本地化失败，那么container的状态就会被变为Localization Failed。如果container直接进入Done状态，那么container运行将会被跳过。  
+
+一旦container的资源需求条件被满足，那么Container_Launched事件将会被触发并且container状态将会被改为Running。在这个过渡中，ContainerMonitor服务会被用于去监控container的资源使用情况。NodeManager会等待container的完成。如果container被成功执行，那么一个成功事件将会被调用并且container的退出状态会被标记为0。container的状态会被更改为EXITED_WITH_SUCCESS。如果container失败了，那么退出码和诊断信息将会被更新，并且container的状态会被更改为EXITED_WITH_FAILURE。  
+
+在任务状态，如果一个container接受到了一个kill信号，那么container都会变为KILLING状态，当container被回收完成，那么container的状态会被更改为Container_CleanedUp_After_Kill。对于一个container来说，回收它使用的资源是强制性的。当资源被回收完成，Container_Resources_CleanedUp事件会被调用并且状态会被标记为Done。  
 
 #### 关注点 3 - 本地化资源  
+资源本地化是作为执行container之前下载container所需要的资源文件被定义的。比如，如果一个container的执行需要一个jar文件，那么一个本地资源就会配置在ContainerLaunchContext中。它负责给NodeManager服务下载资源文件到NodeManager所在节点的本地文件系统。想要了解更多有关资源本地化的内容，你可以参考第8章 深入理解YARN组件。  
 
+NodeManager维护了本地化资源的生命周期。它存储了与资源相关的信息。信息包括：  
+* 在本地文件系统上的资源路径
+* 资源大小
+* container使用的资源列表
+* 资源的可见性，类型，模式和下载路径
+* LocalResourceRequest：NodeManager中本地资源的生命周期，定义在 org.apache.hadoop.yarn.server.nodemanager.containermanager.localizer包中。
+* LocalizedResource：这个类存储了资源的信息，定义了状态的转换和与之相关联的事件处理器。
+* ResourceState：这是一个枚举，定义了一个资源的不同的状态。
+* event.ResourceEventType：一个枚举，定义了一个资源的不同的事件类型。  
 
+下面的状态转换图说明NodeManager对资源的关注点：  
+![image](/Images/YARN/yarn-resource-state.png)  
+
+对于资源，NodeManager的初始关注点和最终关注点如下：  
+* 初始状态：INIT
+* 最终状态：LOCALIZED/FAILED  
+
+作为NodeManager中对container指定的关注点，资源本地化在INIT_CONTAINER事件期间被初始化。在container运行上下文中指定了资源初始化的状态为INIT。  
+
+当请求一个资源的时候，FetchResourceTransition处理会被调度，并且它会初始化一些资源的信息，比如位置，可见性，上下文等等。资源的状体也会被更改为DOWNLOADING。  
+
+一旦资源下载成功，资源的状态会被标记为LOCALIZED，并且资源路径，大小和引用都会被更新。如果资源本地化失败，那么资源会被标记为FAILED，并且上下文会被更新，带有失败原因的诊断信息。  
+
+如果对DOWNLOADING和LOCALIZED状态的资源有任何后来的请求，那么会提供本地资源的路径和上下文进行处理。  
+
+多个container可以使用在同一时间使用相同的资源。NodeManager服务对每一个本地化的资源都维护了一个container队列。在资源被请求期间，container的引用会被添加到队列中，在资源释放之后会从队列中删除container的引用。  
 
 ### 通过日志分析内部变化  
 在YARN中的ResourceManager和NodeManager服务都会生成日志文件并且以.log格式的文件将它们存放在以HADOOP_LOGS_DIR变量指定的本地文件目录内。默认情况下，日志文件会被存放在HADOOP_PREFIX/logs目录中。YARN中所有的状态转换都会被记录在日志文件中。在本节，我们将会涉及到下面几个状态转换和这些转换期间的日志生成。  
