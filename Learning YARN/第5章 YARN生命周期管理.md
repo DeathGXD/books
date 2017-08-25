@@ -1,17 +1,17 @@
 YARN框架由ResourceManager服务和Nodemanager服务组成。这些服务维护着与YARN生命周期相关的不同组件，比如：application，container，resource等等。本章将关注YARN框架的核心实现，并且描述了ResourceManager和NodeManager如何在分布式环境下管理应用的执行。  
 
-无所谓你是否是一个Java开发者，一个开源contributor，一个集群管理者，或者是一个用户；本章提供了一个简单的并且容易的方法去洞穿YARN的内部细节。在本章中，我们将会讨论下面主题：  
-* 状态管理模拟的介绍
-* 对于一个节点、一个应用、一个应用的attempt和一个container的ResourceManager的预览
-* 对于一个应用、一个container和一个resource的NodeManager的预览
-* 通过logs分析转换  
+无所谓你是否是一个Java开发者，一个开源contributor，一个集群管理者，或者是一个用户；本章提供了一个简单容易的途径去洞穿YARN的内部细节。在本章中，我们将会讨论下面主题：  
+* 介绍状态管理模拟
+* ResourceManager对于一个节点、一个应用、一个应用的attempt和一个container的关注点
+* NodeManager对于一个应用、一个container和一个resource的关注点
+* 通过logs分析内部转换  
 
 ### 状态管理模拟介绍  
-任何系统中，在事件驱动实现的组件中，生命周期管理都是重要的一部分。系统组件通过预定义好的一系列有效状态进行通信传递。状态之间的转换是由相关的状态和动作去执行相对应的事件。  
+在任何系统中，以事件驱动实现的组件中的生命周期管理都是重要的一部分。系统组件通过预定义好的一系列有效状态进行通信传递。状态之间的转换是由相关的状态和动作去执行相对应的事件。  
 
 下面是本章中使用到的一些核心的术语：  
-* **State**：在计算机科学中，
-* **Event**：
+* **State**：在计算机科学中，计算机程序的状态是一个专业术语，指的所有被存储的信息，在指定之间内给定的实例中，哪个程序可以访问。
+* **Event**：一个事件是一个动作
 * **Event handle**：
 * **State transition**：
 
@@ -21,14 +21,14 @@ YARN框架由ResourceManager服务和Nodemanager服务组成。这些服务维�
 作为master服务，ResourceManager服务管理着下面内容：  
 * 集群资源(集群中的节点)
 * 提交到集群上的应用
-* 应用运行的尝试次数
-* 运行在集群节点上的Containers  
+* 正在运行的应用的attempt
+* 集群节点上正在运行的Containers  
 
 ResourceManager服务拥有它自己的关注点，是与YARN管理和YARN中应用执行相关的不同进程。下面是ResourceManager的目标：  
 * **Node**：是带有NodeManager进程的机器
 * **Application**：是被客户端提交到ResourceManager的程序
 * **Application Attempt**：与应用执行相关的attempt
-* **Container**：是运行被提交应用的业务逻辑的进程  
+* **Container**：运行提交应用业务逻辑的进程  
 
 #### 关注点 1 - Node  
 节点角度是ResourceManager管理着集群内部所有的NodeManager节点的生命周期。对于集群中的每一个，ResourceManager都会维护着一个RMNode对象。每个节点的状态和事件类型都被定义在枚举NodeState和RMNodeEventType中。  
