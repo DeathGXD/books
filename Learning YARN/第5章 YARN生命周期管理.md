@@ -24,14 +24,14 @@ YARN框架由ResourceManager服务和Nodemanager服务组成。这些服务维�
 * 正在运行的应用的attempt
 * 集群节点上正在运行的Containers  
 
-ResourceManager服务拥有它自己的关注点，是与YARN管理和YARN中应用执行相关的不同进程。下面是ResourceManager的目标：  
-* **Node**：是带有NodeManager进程的机器
-* **Application**：是被客户端提交到ResourceManager的程序
+ResourceManager服务拥有它自己的关注点，是与YARN管理和YARN中应用执行相关的不同进程。下面是ResourceManager的关注点：  
+* **Node**：带有NodeManager进程的机器
+* **Application**：客户端提交到ResourceManager的程序
 * **Application Attempt**：与应用执行相关的attempt
 * **Container**：运行提交应用业务逻辑的进程  
 
 #### 关注点 1 - Node  
-节点角度是ResourceManager管理着集群内部所有的NodeManager节点的生命周期。对于集群中的每一个，ResourceManager都会维护着一个RMNode对象。每个节点的状态和事件类型都被定义在枚举NodeState和RMNodeEventType中。  
+对于节点的关注是ResourceManager管理着集群内部所有的NodeManager节点的生命周期。对于集群中的每一个，ResourceManager都会维护着一个RMNode对象。每个节点的状态和事件类型都被定义在枚举NodeState和RMNodeEventType中。  
 
 下面是涉及到枚举和类：  
 * org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNode：这是一个接口，定义了一个NodeManager节点上关于可用资源的信息，比如：它的容量，已经执行的应用，正在运行的container，等等。
@@ -46,9 +46,27 @@ ResourceManager服务拥有它自己的关注点，是与YARN管理和YARN中应
 * 开始状态：**NEW**
 * 最终状态：**DECOMMISSION/REBOOTED/LOST**  
 
-NodeManager一旦向ResourceManager进行注册，该节点就会被标记为NEW状态。在注册成功之后，状体会被更新为RUNNING。
+NodeManager一旦向ResourceManager进行注册，该节点就会被标记为NEW状态。在注册成功之后，状体会被更新为RUNNING。一个AddNodeTransition事件处理器会被初始化，用于更新新节点的调度器和它的容量。如果该节点存储于不活跃的RM节点列表，RM会从不活跃节点列表删除该节点，随着新加入的节点信息更新集群的度量。如果节点是新加入的，那么会直接在集群的度量中增加活跃的节点的数量。  
 
+每个NodeManager节点都会以心跳的形式向ResourceManager发送它的活跃信息。ResourceManager会持续跟踪每个节点发送的最后一次心跳，如果最后一次通信的时间间隔大于集群中配置的所允许的最大时间间隔，那么该节点会被认为是过期的。默认情况下，等待NodeManager发送心跳的最大时间间隔是600000ms，也就是10分钟，如果超过这个时间，那么该节点会被认为死亡。然后会将该节点标记为UNUSABLE，并且会将它添加到ResourceManager中的非活跃节点列表。所有运行在死亡节点上的container也会被认为是死亡的，那么会从新调度新的container到其他NodeManager节点。NodeManager节点同样可以从集群中退役，或者是由于技术原因进行重启。  
 
+NodeManager的心跳信息也包含了与该节点相关的正在运行的或者完成的container的信息。如果节点是健康的，那么节点的信息将会更新为最新的度量，并且为下一次心跳初始化一个更新调度事件。ResourceManager同样也会追踪每个NodeManager上完成的应用和container。  
+
+假如NodeManager重启或者一个服务重启，NodeManager都会尝试重新连接到ResourceManager继续开始它的服务。如果重连节点的配置(节点总容量和节点HTTP端口)改变了，在重连节点相同的情况下(主机IP地址没有改变)，那么NodeManager会替换旧的或者重新设置心跳。调度器伴随着新加入节点事件将会被更新并且节点将会标记为RUNNING。  
+
+YARN包中定义的NodeHealthCheckerService类用于NodeManager判断节点的健康状况。每个节点都会定期执行YARN配置文件中yarn.nodemanager.health-checker.script.path属性中配置的一个健康检查的脚本。默认运行节点中健康检查脚本的频率是600000ms，也就是10分钟，可以通过yarn.nodemanager.health-checker.interval-ms属性进行配置。  
+
+NodeHealthScriptRunner类用来运行节点中健康检查的脚本，解析健康监控脚本的输出并且检查报告中的错误。脚本超时或者脚本中引起了IOException输出都将会被忽略。如果脚本抛出java.io.IOException或者org.apache.hadoop.util.Shell.ExitCodeException，输出被忽略，节点被认为保持健康，因为脚本可能存在语法错误。  
+
+如果存在下面的情况，节点会被认为是非健康：  
+* 健康脚本超时
+* 健康脚本输出中存在一行以ERROR开头
+* 当执行脚本的时候抛出了一个异常  
+
+节点同样会运行一个DiskHealthCheckerService类，去获取节点磁盘的健康信息。想要阅读更多有关节点健康检查脚本的信息，你可以参考第3章 管理一个Hadoop-YARN集群。  
+
+下面是一个ResourceManager对节点关注点的总览表：  
+![image](/Images/YARN/yarn-resourcemanager-view.png)  
 
 #### 关注点 2 - Application  
 ResourceManager在application中的关注点表示在YARN集群上执行的应用运行期间的生命周期的管理。在之前的章节，我们讨论了应用执行的不同阶段。本节，我们将会对ResourceManager如何管理应用的生命周期给出一个更详细的说明。  
