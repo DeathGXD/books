@@ -78,9 +78,43 @@ ResourceManager在application中的关注点表示在YARN集群上执行的应�
 * org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState：这是一个定义了一个应用中不同状态的枚举  
 
 下面的状态转换图说明了ResourceManager对于一个应用的关注点：
-![image](/Images/YARN/yarn-resourcemanager-application-view.png)
+![image](/Images/YARN/yarn-resourcemanager-application-view.png)  
 
+ResourceManager对应用观察的初始状态和最终状态如下：  
+* 初始状态：NEW
+* 最终状态：FAILED/FINISHED/KILLED  
 
+当客户端提交一个新的应用请求到ResourceManager时，RM会注册该应用并且提供一个唯一的application ID(在前面章节提到的应用执行流程中的第一阶段)。应用的状态会被初始化为NEW。  
+
+RMAppImpl对象维护了一组包含节点当前状态相关信息的RMNode对象。在NODE_UPDATE事件期间，ResourceManager会更新集群中的可用节点和不可用节点的信息。在NEW状态的应用在NODE_UPDATE期间状态不会改变。  
+
+客户端使用application submission context提交应用。如果ResourceManager的恢复机制被开启，应用的submission context会被存储到为ResourceManager配置的状态存储中。一旦应用上下文被保存，那么应用就会被提交到集群上，意味着应用被放入到一个对列中执行了。  
+
+应用会从配置的队列中拿出来执行；如果应用的资源要求被满足，那么该应用将会被接受并且它的状态会被修改为ACCEPTED。  
+
+如果应用由于资源不足或者其他一些异常被拒绝，那么一个App_Rejected事件将会被触发。在这种情况下，应用的状态将会被标记为FAILED。  
+
+ApplicationMaster作为应用执行中的第一个attempt在其中的一个节点上被运行。ApplicationMaster会向ResourceManager注册它的attempt，并且为attempt创建一个RMAppAttempt上下文。在成功注册之后，应用的状态将会被更改为RUNNING。  
+
+一旦成功完成，应用的attempt会注销它的attempt，更改它的状态为REMOVING，之后会更改为FINISHED状态。如果attempt是一个非管理的attempt，那么attempt可以直接从RUNNING变更为FINISHED状态。  
+
+如果一个attempt失败了，那么ResourceManager会在另一台节点上重新执行应用的attempt。伴随着Attempt_Failed事件的触发，应用会被标记为SUBMITTED，并且应用的attempt的数量会增加。如果重试次数超过了配置中指定了最大重试次数，那么应用将会被标记为FAILED。  
+
+你可以在yarn-site.xml文件中指定应用允许的最大attempt次数，配置如下：  
+```xml
+<property>
+  <description>Default value is 2</description>
+  <name>yarn.resourcemanager.am.max-attempts</name>
+  <value>2</value>
+</property>
+```  
+
+在应用的任何状态中，包括SUBMITTED、ACCEPTED、RUNNING、等等，如果一个kill信号或事件被用户发送，那么应用的状态会直接更新为FAILED，并且应用使用的所有的container将会被释放。  
+
+下面是一个ResourceManager对应用关注点的总览表：  
+![image](/Images/YARN/yarn-resourcemanager-application-view1.png)  
+![image](/Images/YARN/yarn-resourcemanager-application-view2.png)  
+![image](/Images/YARN/yarn-resourcemanager-application-view3.png)  
 
 #### 关注点 3 - 一个应用的attempt
 
