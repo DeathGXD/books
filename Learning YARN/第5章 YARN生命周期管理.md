@@ -154,7 +154,31 @@ ApplicationMaster将会向ResourceManager请求container并且管理应用的执
 ![image](/Images/YARN/yarn-application-attempt-view3.png)  
 
 #### 视角 4 - Container  
+ResourceManager管理着所有请求的container的生命周期。应用的执行需要container，在应用完成之后会将container归还给ResourceManager。ResourceManager存储着与每个container相关的元数据，并且相应的对应用进行调度。  
 
+container的元数据包括：  
+* **Container ID**：这是对于所有的container来说唯一的ID。  
+* **Application attempt ID**：与container相关联的应用attempt ID。
+* **Node ID**：这是为container预留的和分配的节点。
+* **Resource**：内存和虚拟core。
+* **Time-Stamps**：container创建和完成时间。
+* **States**：包括ContainerState和RMContainerState。
+* **Monitoring Info**：container的诊断信息和日志URL。  
+
+下面是涉及到的类和枚举列表：  
+* org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainer：对于ResourceManager来说一个container的接口。它存储了container的属性，比如：它的优先级，创建时间，attempt ID，等等。
+* org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerImpl：这个类定义container的状态转换和相关联的事件处理器。
+* org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerEventType：定义了container中不同的事件类型的枚举。
+* org.apache.hadoop.yarn.server.resourcemanager.rmcontainer.RMContainerState：定义了container中不同的状态的枚举。  
+
+下面的状态转换图说明了ResourceManager对于container的视角：  
+![image](/Images/YARN/yarn-container-state-transition.png)  
+
+ResourceManager对一个container初始状态和最终状态的视角如下：  
+* 初始状态：**NEW**
+* 最终状态： COMPLETED/EXPIRED/RELEASED/KILLED  
+
+ResourceManager会初始化一个新的RMContainer作为请求的container被接受。
 
 
 
