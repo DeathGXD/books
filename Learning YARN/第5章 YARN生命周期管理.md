@@ -17,7 +17,7 @@ YARN框架由ResourceManager服务和Nodemanager服务组成。这些服务维�
 
 
 
-### ResourceManager的关注点
+### ResourceManager的视角
 作为master服务，ResourceManager服务管理着下面内容：  
 * 集群资源(集群中的节点)
 * 提交到集群上的应用
@@ -30,7 +30,7 @@ ResourceManager服务拥有它自己的关注点，是与YARN管理和YARN中应
 * **Application Attempt**：与应用执行相关的attempt
 * **Container**：运行提交应用业务逻辑的进程  
 
-#### 关注点 1 - Node  
+#### 视角 1 - Node  
 对于节点的关注是ResourceManager管理着集群内部所有的NodeManager节点的生命周期。对于集群中的每一个，ResourceManager都会维护着一个RMNode对象。每个节点的状态和事件类型都被定义在枚举NodeState和RMNodeEventType中。  
 
 下面是涉及到枚举和类：  
@@ -39,7 +39,7 @@ ResourceManager服务拥有它自己的关注点，是与YARN管理和YARN中应
 * org.apache.hadoop.yarn.server.resourcemanager.rmnode.RMNodeEventType：这是一个枚举，定义节点中不同的事件类型。
 * org.apache.hadoop.yarn.api.records.NodeState：这是一个枚举，定义了节点中不同的状态。  
 
-下面的状态转换图说明了ResourceManager对于一个节点的关注点：  
+下面的状态转换图说明了ResourceManager对于一个节点的视角：  
 ![image](/Images/YARN/yarn-resourcemanager-state-update.png)  
 
 一个节点在ResourceManager中开始和最终的情形如下：  
@@ -65,10 +65,10 @@ NodeHealthScriptRunner类用来运行节点中健康检查的脚本，解析健�
 
 节点同样会运行一个DiskHealthCheckerService类，去获取节点磁盘的健康信息。想要阅读更多有关节点健康检查脚本的信息，你可以参考第3章 管理一个Hadoop-YARN集群。  
 
-下面是一个ResourceManager对节点关注点的总览表：  
+下面是一个ResourceManager对节点视角的总览表：  
 ![image](/Images/YARN/yarn-resourcemanager-view.png)  
 
-#### 关注点 2 - Application  
+#### 视角 2 - Application  
 ResourceManager在application中的关注点表示在YARN集群上执行的应用运行期间的生命周期的管理。在之前的章节，我们讨论了应用执行的不同阶段。本节，我们将会对ResourceManager如何管理应用的生命周期给出一个更详细的说明。  
 
 这里是一系列涉及到的枚举和类：  
@@ -77,10 +77,10 @@ ResourceManager在application中的关注点表示在YARN集群上执行的应�
 * org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppEventType：这是一个定义了一个应用中不同事件类型的枚举
 * org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState：这是一个定义了一个应用中不同状态的枚举  
 
-下面的状态转换图说明了ResourceManager对于一个应用的关注点：
+下面的状态转换图说明了ResourceManager对于一个应用的视角：
 ![image](/Images/YARN/yarn-resourcemanager-application-view.png)  
 
-ResourceManager对应用观察的初始状态和最终状态如下：  
+ResourceManager对应用视角的初始状态和最终状态如下：  
 * 初始状态：NEW
 * 最终状态：FAILED/FINISHED/KILLED  
 
@@ -111,18 +111,61 @@ ApplicationMaster作为应用执行中的第一个attempt在其中的一个节�
 
 在应用的任何状态中，包括SUBMITTED、ACCEPTED、RUNNING、等等，如果一个kill信号或事件被用户发送，那么应用的状态会直接更新为FAILED，并且应用使用的所有的container将会被释放。  
 
-下面是一个ResourceManager对应用关注点的总览表：  
+下面是一个ResourceManager对应用视角的总览表：  
 ![image](/Images/YARN/yarn-resourcemanager-application-view1.png)  
 ![image](/Images/YARN/yarn-resourcemanager-application-view2.png)  
 ![image](/Images/YARN/yarn-resourcemanager-application-view3.png)  
 
-#### 关注点 3 - 一个应用的attempt
+#### 视角 3 - 一个应用的attempt  
+ResourceManager对于应用attempt的视角，代表了在YARN集群上执行的应用的每个attempt的生命周期。正如我们在应用生命周期中所看到的，当一个应用的状态从ACCEPTED转移到RUNNING，应用的attempt会向ResourceManager进行注册。本节将涉及到应用attempt的状态管理。  
+
+下面是涉及到的类和枚举的列表：  
+* org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttempt：这是ResourceManager中一个应用attempt的接口。一个应用基于配置的attempt最大数量可以有多个attempt。
+* org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptImpl：这个类定义了应用attempt状态转换和对应用当前attempt的访问。
+* org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptEventType：这是一个定义了应用attempt不同事件类型的枚举。
+* org.apache.hadoop.yarn.server.resourcemanager.rmapp.attempt.RMAppAttemptState：这是一个定义了应用attempt不同状态的枚举。  
+
+下面的状态转换图说明了ResourceManager对应用attempt的视角：  
+![image](/Images/YARN/yarn-application-attempt-view.png)  
+
+ResourceManager对于一个应用attempt container的初始状态和最终状态的视角如下：  
+* 初始状态：NEW
+* 最终状态：FINISHED/EXPIRED/RELEASED/KILLED  
+
+当ResourceManager成功接收一个应用，那么该应用的attempt被初始化为NEW状态。一个新的attemptId会被生成给attempt，并且attempt会被加入到应用的attempt列表。  
+
+在那之后，一个RMAppStartAttemptEvent处理器被调用并且attempt的状体会被更改为SUBMITTED。在启动attempt事件期间，attempt首先会向ResourceManager中的ApplicationMasterService进行注册。如果应用运行在安全的模式，那么用户需要经估计应用中的client-token-master-key的验证，在ResourceManager上下文中拥有着相同的key。想要了解更多有关YARN安全的知识，你可以参考第11章，启用YARN集群安全机制。一个AMRMToken会被生成，并且attempt会被添加到调度器中。  
+
+ResourceManager的调度器会接受应用的attempt并且分配为ApplicationMaster程序分配container，依据ContainerLauncheContext对象中的每个条件。如果应用被配置为一个非管理的AM，那么attempt将会被保存并且状态会之间更改为LAUNCHED。  
+
+**非管理的AM**：如果ResourceManager没有管理ApplicationMaster的执行，那么就会认为该应用是非管理的。一个非管理的AM不会要求container的分配，并且ResourceManager也不会启动ApplicationMaster服务。客户端仅仅只能在ResourceManager已经ACCEPTED应用的时候才会启动ApplicationMaster服务。如果ApplicationMaster在其启动期间没有成功连接到ResourceManager，那么ResourceManager会将该应用标记为失败。  
+
+如果ApplicationMaster执行在一个管理环境，那么attempt的状态会被更改为SCHEDULED。之后attempt会请求调度器为期分配container用于ApplicationMasterg服务。  
+
+在成功分配之后，attempt会取得分配的container并且attempt的状态会更改为ALLOCATED。一旦container被分配了，ResourceManager会执行命令去启动ApplicationMaster并且attempt的状态会更改为LAUNCHED。ResourceManager会在ApplicationMaster启动期间等待它的注册，否则ResourceManager会将其标记为FAILED。ApplicationMaster在注册的时候会带着自己所在机器的主机名和端口号和一个用于监控应用执行的URL。ApplicationMaster同样也会向ResourceManager(AMRMClient)和NodeManager(AMNMClient)注册一个通信客户端令牌。  
+
+ApplicationMaster将会向ResourceManager请求container并且管理应用的执行。一旦attempt完成了，它会注销自己并且将状态更改为FINISHING，直到最终状态被保存后，那么attempt会被标记为FINISHED。在attempt执行的任何阶段，如果有任何异常发生，那么attempt都会被标记为FAILED。比如，如果在attempt注册期间出现了一个错误，那么attempt将会被拒绝。类似的，当我们在管理ApplicationMaster的时候，如果没有足够的资源去运行ApplicationMaster，那么运行事件就会失败，attempt也会被标记为FAILED。  
+
+如果客户端发送一个信号去杀死一个应用，那么它的attempt或者所有被分配的container将会直接被标记为FAILED。一个KillAllocatedAMTransition处理器会被调用，清理所有已经被执行的任务。  
+
+下面是一个ResourceManager对应用attempt视角的总览表：  
+![image](/Images/YARN/yarn-application-attempt-view1.png)  
+![image](/Images/YARN/yarn-application-attempt-view2.png)  
+![image](/Images/YARN/yarn-application-attempt-view3.png)  
+
+#### 视角 4 - Container  
 
 
-#### 关注点 4 - Container
 
 
-### NodeManager的视野  
+
+
+
+
+
+
+
+### NodeManager的视角  
 YARN中的NodeManager服务向ResourceManager更新它的资源容量和跟踪运行在本节点上的container的执行。除了节点的健康，NodeManager服务主要负责下面的事：
 * 一个应用的执行并和与它相关的containers
 * 提供给应用相关的containers本地化执行
@@ -133,7 +176,7 @@ NodeManager拥有它自己的关注点：
 * Container：作为一个独立的进程管理着container的执行
 * 本地资源：包含container执行所需要的文件
 
-#### 关注点 1 - Application  
+#### 视角 1 - Application  
 NodeManager管理着应用的container的生命周期和应用执行期间使用的资源。NodeManager观察一个应用表示的是NodeManager如何管理container的执行，资源和应用的日志。  
 
 下面是设计到的一些枚举和类的列表。所有的这些类都被定义在org.apache.hadoop.yarn.server.nodemanager.containermanager.application包中。  
@@ -148,7 +191,7 @@ NodeManager服务仅仅存储了与应用相关的最基本的信息。应用元
 * 相关联的container列表
 * 用户名  
 
-下面的状态转换图说明了NodeManager对一个应用的关注点：  
+下面的状态转换图说明了NodeManager对一个应用的视角：  
 ![image](/Images/YARN/yarn-application-state-change.png)  
 
 NodeManager对一个应用所关注的初始状态和最终状态如下：  
@@ -165,7 +208,7 @@ NodeManager将一个应用的状态标记为NEW，初始化应用，并且将应
 
 当应用执行完成时，Finish_Application事件将会被触发。NodeManager会等待应用所有当前正在的运行的container的执行完成。应用的状态会改为Finishing Containers Wait。在所有的container完成之后，NodeManager服务会清理所有被应用所使用的资源并且为应用执行日志聚集。一旦资源清理完成，应用将会被标记为FINISHED。  
 
-#### 关注点 2 - Container  
+#### 视角 2 - Container  
 正如之前讨论的，NodeManager负责提供资源，container的执行，资源的清理，等等。NodeManager中一个container的生命周期被定义在org.apache.hadoop.yarn.server.nodemanager.containermanager.container包中。  
 
 下面是涉及到的一些枚举和类的列表：  
@@ -174,7 +217,7 @@ NodeManager将一个应用的状态标记为NEW，初始化应用，并且将应
 * ContainerEventType：这是一个枚举，定义了container中不同的事件类型。
 * ContainerState：这是一个枚举，定义了container中不同的状态。  
 
-下面的状态转化图说明了NodeManager对于一个container的关注点：  
+下面的状态转化图说明了NodeManager对于一个container的视角：  
 ![image](/Images/YARN/yarn-container-state-change.png)  
 
 NodeManager对一个container所关注的初始状态和完成状态如下：  
@@ -189,7 +232,7 @@ ResourceManager分配container到一个单独的机器上。因为container是�
 
 在任务状态，如果一个container接受到了一个kill信号，那么container都会变为KILLING状态，当container被回收完成，那么container的状态会被更改为Container_CleanedUp_After_Kill。对于一个container来说，回收它使用的资源是强制性的。当资源被回收完成，Container_Resources_CleanedUp事件会被调用并且状态会被标记为Done。  
 
-#### 关注点 3 - 本地化资源  
+#### 视角 3 - 本地化资源  
 资源本地化是作为执行container之前下载container所需要的资源文件被定义的。比如，如果一个container的执行需要一个jar文件，那么一个本地资源就会配置在ContainerLaunchContext中。它负责给NodeManager服务下载资源文件到NodeManager所在节点的本地文件系统。想要了解更多有关资源本地化的内容，你可以参考第8章 深入理解YARN组件。  
 
 NodeManager维护了本地化资源的生命周期。它存储了与资源相关的信息。信息包括：  
@@ -202,7 +245,7 @@ NodeManager维护了本地化资源的生命周期。它存储了与资源相关
 * ResourceState：这是一个枚举，定义了一个资源的不同的状态。
 * event.ResourceEventType：一个枚举，定义了一个资源的不同的事件类型。  
 
-下面的状态转换图说明NodeManager对资源的关注点：  
+下面的状态转换图说明NodeManager对资源的视角：  
 ![image](/Images/YARN/yarn-resource-state.png)  
 
 对于资源，NodeManager的初始关注点和最终关注点如下：  
