@@ -178,16 +178,17 @@ ResourceManager对一个container初始状态和最终状态的视角如下：
 * 初始状态：**NEW**
 * 最终状态： COMPLETED/EXPIRED/RELEASED/KILLED  
 
-ResourceManager会初始化一个新的RMContainer作为请求的container被接受。
+作为请求的container被接受，ResourceManager会初始化一个新的RMContainer。container要么分配给应用，要么当通过调用Reserved事件时，container处于NEW状态  application attempt可以给container预留位置。  
 
+ApplicationMaster获取分配的container并将container的状态更新为ACQUIRED。container的创建时间和分配的节点信息都会保存在container的上下文中。ApplicationMaster与NodeManager进行通信并执行命令启动container。container会在分配的节点上运行并且状态更改为RUNNING。在成功执行之后，完成事件会被调用，container的状态会被标记为COMPLETED。ApplicationMaster会释放已经完成的container占有的内存将其归还给ResourceManager，FinishedTransition处理器会被调用。完成时间，完成状态，退出状态和诊断信息都会被保存。如果一个container在RUNNING状态就直接被释放了，那么container的状态会更改为RELEASED并且KillTransition处理器会被调用。  
 
+在应用执行的任何阶段，container都会被监控。不管在什么状态，如果有效期到了，container的执行将会被停止，并且container会被标记为EXPIRED。类似的，不管在什么状态，如果container收到了kill信号，它会直接更改为KILLED状态。  
 
+下面是一个ResourceManager对container视角的总览表：  
+![image](/Images/YARN/yarn-container-view1.png)  
+![image](/Images/YARN/yarn-container-view2.png)  
 
-
-
-
-
-
+本节完成了ResourceManager在YARN程序中的视角。想要阅读更多有关转换或者事件的信息，你可以参考每个章节介绍的实现类。在下一节，你将会学到关于YARN程序中NodeManager的视角。  
 
 ### NodeManager的视角  
 YARN中的NodeManager服务向ResourceManager更新它的资源容量和跟踪运行在本节点上的container的执行。除了节点的健康，NodeManager服务主要负责下面的事：
