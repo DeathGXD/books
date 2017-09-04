@@ -7,13 +7,15 @@ YARN包含了多种高效和可扩展的组件, 使得YARN变成一个强大的�
 * Timeline服务预览、web application proxy和YARN调度负载模拟器  
 
 ### 理解ResourceManager  
-ResourceManager是YARN框架的核心组件, 负责管理一个多节点集群的资源。它促使资源的分配和记录YARN集群上跨多个节点运行的分布式应用。它与每个节点上运行的NodeManager进程和每个应用的服务ApplicationMaster共同工作。他管理着整个集群的资源和执行YARN应用。  
+ResourceManager是YARN框架的核心组件, 负责管理一个多节点集群的资源。它促使资源的分配和记录YARN集群上跨多个节点运行的分布式应用。它与每个节点上运行
+的NodeManager进程和一个叫做ApplicationMaster的应用服务共同工作。他管理着整个集群的资源和执行YARN应用。  
 
-ResourceManager拥有多个子组件协助它有效的管理一个多节点的集群，并且集群上并行运行着成千上万的分布式的，资源密集的并且有时限的应用。下图展示了具体的情形：  
+ResourceManager拥有多个子组件协助它有效的管理一个多节点的集群，并且集群上并行运行着成千上万的分布式的，资源密集的并且有时限的应用。
+下图展示了具体的情形：  
 ![image](/Images/YARN/yarn-deep-components.PNG)  
 
 #### 客户端和管理接口
-ResourceManager暴露方法给client和集群管理员，用来跟ResourceManager进行RPC通信和接受管理命令的优先级。这里是两个用来跟ResourceManager进行通信的类：
+ResourceManager暴露方法给client和集群管理员，用来跟ResourceManager进行RPC通信和按照优先级接受管理命令。这里是两个用来跟ResourceManager进行通信的类：
 1. **ClientRMService**  
     ClientRMService类是ResourceManager的客户端接口。所有的客户端用来创建与ResouceManager的RPC连接。这个模块处理所有的ResouceManager的RPC接口。这个服务的实现被定义在org.apache.hadoop.yarn.server.resourcemanager.ClientRMService包中。客户端初始化这个服务使用客户端配置文件，比如yarn-site.xml。  
 
@@ -58,10 +60,10 @@ ResourceManager的核心组件包含调度器和应用的管理。下面的类�
     * ZKRMStateStore
     * NullRMStateStore  
 
-ZKRMStateStore是最可靠的和被推荐的存储RMState的机制，但是它需要一个Zookeeper作为Znode共同存储信息。ResourceManager的状态存储机制在配置ResourceManager高可用(HA)时同样也会被用到。更多状态存储相关的内容，你可以参考在第3章，管理一个Hadoop-YARN集群中的ResourceManager高可用中的状态存储配置。  
+    ZKRMStateStore是最可靠的和被推荐的存储RMState的机制，但是它需要一个Zookeeper作为Znode共同存储信息。ResourceManager的状态存储机制在配置ResourceManager高可用(HA)时同样也会被用到。更多状态存储相关的内容，你可以参考在第3章，管理一个Hadoop-YARN集群中的ResourceManager高可用中的状态存储配置。  
 
 4. SchedulingMonitor  
-这个接口提供了对container的监控和编辑一个定期调度的规定。它同样提供了一个调整资源监控监控的规定和定义SchedulingEditPolicy的规定。想要阅读更多有关SchedulingMonitor的内容，你可以org.apache.hadoop.yarn.server.resourcemanager.monitor.SchedulingMonitor类。  
+    这个接口提供了对container的监控和编辑一个定期调度的规定。它同样提供了一个调整资源监控监控的规定和定义SchedulingEditPolicy的规定。想要阅读更多有关SchedulingMonitor的内容，你可以org.apache.hadoop.yarn.server.resourcemanager.monitor.SchedulingMonitor类。  
 
 #### NodeManager接口
 ResourceManager与NodeManager进行通信。NodeManager会定期向ResourceManager汇报NodeManager节点的健康和资源信息。下面是一些ResourceManager用来管理集群中所有NodeManager节点的类：  
@@ -184,12 +186,55 @@ NodeManager管理着下面的安全服务：
 想要配置和启动一个YARN TimeLine服务，你可以参考第3章， 管理一个Hadoop-YARN集群。  
 
 ### Web application proxy服务  
+YARN中引入Web application proxy是为了减少通过YARN进行网络攻击的可能性。默认情况下，它是作为ResourceManager的一部分运行，但是管理员可以通过设置yarn-site.xml中的属性进行配置。  
 
-
-
+YARN中，Application Master负责提供一个Web UI和连接到ResourceManager的链接信息。这导致服务通信容易受到某些常见的攻击。web applicatiion proxy通过警告不拥有给定应用程序的用户，他们将连接到一个不可信的站点的方式缓和了风险。  
 
 ### YARN调度负载模拟器  
+SLS是一个工具，用来在一台机器上模拟出相当于大规模YARN集群的负载。它帮助研究人员和开发人员去体验新调度器的特性，并预知大规模集群的性能表现。集群的大小和应用负载的大小可以从配置文件中进行配置。模拟器将产生近实时的度量：  
+* 整个集群和每个队列的资源使用量
+* 详细的应用执行追踪，用于分析调度器在吞吐量，公平性，job的转变时间等方面的表现
+* 调度器算法的核心度量，比如每个调度器操作的时间  
 
+### YARN中的资源本地化  
+资源指的是容器执行分配任务时所需的任何东西。因为container被NodeManager运行和管理在不同的节点上，NodeManager要负责确认请求的资源在每个节点都可用。YARN通过提供ResourceLocalizationService服务促使了NodeManager的这一特性。这个服务负责下载本地的应用资源到NodeManager所在节点的文件系统并且确保对于container运行那个应用是可用的。  
 
+#### 资源本地化术语  
+在本节，我们将会讨论一些YARN中与资源本地化相关的术语。为了配置和使用资源本地化，明白下面的概念的非常重要的：  
+* LocalResource：它被定义为container用于执行应用所需要的资源。NodeManager负责在运行container前确保本地文件系统中的资源可用。LocalResource拥有下面的属性：  
+    * URL：可用的并且可以下载的资源的位置
+    * LocalResourceType：它定义了被NodeManager所下载的资源的类型。它是下列之一：  
+    ARCHIVE：NodeManager自动解压缩归档资源  
+    FILE  
+    PATTERN：包含了部分归档文件和正常文件  
+    * Size：这是需要下载的资源的大小
+    * Timestamp：这是下载资源的创建时间戳。被用于验证。
+    * LocalResourceVisibility：指定了需要下载到NodeManager节点本地文件系统上的资源的可见性。它被定义为：  
+    PUBLIC：被节点上多有的用户共享  
+    PRIVATE：被同一个用户的所有应用共享  
+    APPLICATION：被一个独立应用中的所有运行的container所共享  
+* ResourceState：代表了任意时间点中资源的状态。有效的状态如下：  
+    * INIT
+    * DOWNLOADING
+    * LOCALIZED
+    * FAILED  
+* LocalizerTracker：这是ResourceLocalizationService的一个子组件。它实现了ContainerLocalizer的生成。它生成和跟踪私有的和公有的localizer。
+* PublicLocalizer：作为特定的线程启动，并且下载public资源到NodeManager所在节点的本地文件系统。在同一个时间点，如果多个container请求同一份资源的情况下，通过检查资源的状态是否违反下载状态确保下载的安全。
+* LocalizerRunner：作为特定的程序启动，并运行ContainerLocalizer带有用户访问证书。  
 
-### YARN中的资源本地化
+#### 本地化资源的目录结构  
+对于本地化资源，YARN创建并且使用Hadoop默认的日志目录下面的用户目录。用户可以指定一个目录用来下载和存储资源，正如下图所展示的一样：  
+![image](/Images/YARN/yarn-resource-localization.png)  
+
+ResourceLocalizationService要么使用默认的本地目录要么使用自定义的本地目录，并且创建子目录用于缓存和存储资源。依赖于资源的可见性，在接下来的部分中，将对目录进行分类：  
+1. Public  
+    带有public可见性的资源，所有用户之间共享。所有的资源被放置在NodeManager节点本地目录中的一个单独的目录，也就是<yarn.nodemanager.local-dirs>/filecache，如下图所示：  
+    ![image](/Images/YARN/yarn-resource-localization-public.png)  
+2. Private  
+    带有private可见性的资源，用户的所有应用之间共享。所有资源存储在用户指定的缓存目录，也就是<yarn.nodemanager.local-dirs>/usercache/<username>/filecache，如下图所示：  
+    ![image](/Images/YARN/yarn-resource-localization-private.png)  
+3. Application  
+    带有application可见性的资源，应用的所有container之间共享，被存储应用指定的缓存目录，也就是<yarn.nodemanager.local-dirs>/usercache/<username>/appcache/<appId>/，如下图所示：  
+    ![image](/Images/YARN/yarn-resource-localization-application.png)  
+
+### 总结
