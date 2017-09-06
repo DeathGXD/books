@@ -62,11 +62,33 @@ Diagnostics:
 * -kill ApplicationId：kill选项被用于杀死一个正在运行的/已经提交的应用。如果应用已经完成了，应用的状态要么是FINISHED，KILLED，要么是FAILED，然后会在命令行打印信息。换句话说，它是发送了一个请求到ResourceManager去杀死一个应用。  
 
 ##### Node  
+YARN由运行着NodeManager守护进程的Java程序的节点组成。ResourceManager保存着节点信息，yarn node命令使用 org.apache.hadoop.yarn.api.records.NodeReport类以节点报告的形式打印节点信息。  
+* 用法：yarn node <options>
+* 类：org.apache.hadoop.yarn.client.cli.NodeCLI  
 
+**命令选项**  
+* -status NodeId：status选项被用于以节点报告的形式打印节点状态。NodeId参数是一个字符串，代表了org.apache.hadoop.yarn.api.records.NodeId类的一个对象，也就是，节点主机名和与NodeManager守护进程通信端口，IPC服务监控端口的组合。对于存在的/有效的节点ID，它会打印从NodeReport类对象获取的数据。  
 
+**示例输出**  
+```shell
+Node Report:
+Node-Id: slave1:36801
+Rack: /default-rack
+Node-State: RUNNING
+Node-Http-Address:slave1: 8042
+Last-Health-Update: Sun 09/Feb/14 11:37:53:774IST
+Health-Report:
+Containers: 0
+Memory-Used: 0MB
+Memory-Capacity: 8192MB
+CPU-Used: 0 vcores
+CPU-Capacity: 8 vcores
+```  
 
-
-
+* -list：list选项会打印出基于节点状态所有节点的列表。它支持一个可选的用法-states去基于节点状态进行过滤，-all列出所有节点：  
+    * 用户可以指定以逗号进行分割的状态值列表进行过滤。org.apache.hadoop.yarn.api.records.NodeState是一个代表了节点不同状态的枚举。
+    * 状态有： NEW, RUNNING, UNHEALTHY, DECOMMISSIONED, LOST,REBOOTED
+    * list命令的输出一系列有关节点的信息，比如,Node-Id,Node-State,Node-Http-Address和运行的container的数量。  
 
 ##### Logs  
 
