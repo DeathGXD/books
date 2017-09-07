@@ -91,27 +91,26 @@ CPU-Capacity: 8 vcores
     * list命令的输出一系列有关节点的信息，比如,Node-Id,Node-State,Node-Http-Address和运行的container的数量。  
 
 ##### Logs  
+logs命令是用来获取已完成应用的日志，也就是说，任意以下三种状态之一的应用——FAILED，KILLED或者FINISHED。  
 
+想要通过命令行查看日志，用户需要开启YARN集群的日志聚合(log-aggregation)。想要启用日志聚合功能，用户需要设置yarn-site.xml文件中的 yarn.log-aggregation-enable属性为true。用户也可以基于应用的container ID和节点ID查看日志。  
+* 用法：yarn logs -applicationId <application ID> <options>
+* org.apache.hadoop.yarn.client.cli.LogsCLI  
 
-
-
-
-
-
+**命令选项**  
+* -applicationId applicationID：applicationId命令是托管式的，用于从ResourceManager获取应用细节
+* -appOwner AppOwner：可选的，加入没有指定，默认是当前用户
+* -nodeAddress NodeAddress -containerId containerId：nodeAddress和containerId命令可以指定特定节点上指定container的日志。nodeAddress是host:port字符串的形式(与NodeId相同)。  
 
 ##### Classpath  
-
-
-
-
-
-
+classpath命令被用于打印YARN集群当前CLASSPATH的值。这个命令对于开发人员和集群管理员非常有用，因为它展示了正在运行的YARN的PATH库列表。  
+* 用法：yarn classpath
+* 脚本：echo $CLASSPATH  
 
 ##### Version  
-
-
-
-
+version命令被用于所部属YARN集群的版本。因为YARN是与Hadoop紧紧绑定在一起的，所以该命令会使用HadoopUtil类去获取使用的hadoop包的版本。  
+* 用法：yarn version
+* 类：org.apache.hadoop.util.VersionInfo  
 
 #### 管理命令  
 
