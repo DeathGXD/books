@@ -113,20 +113,30 @@ version命令被用于所部属YARN集群的版本。因为YARN是与Hadoop紧�
 * 类：org.apache.hadoop.util.VersionInfo  
 
 #### 管理命令  
-
-
-
-
-
+YARN管理命令主要用于在一个单独节点上启动集群服务。集群管理员也使用管理命令去管理集群的节点，队列，与访问控制列表相关的信息，等等。  
 
 ##### ResourceManager/NodeManager/ProxyServer  
+这些命令被用于在一个单独的节点上启动YARN服务。对于ResourceManager和NodeManager服务，脚本会将日志属性添加到classpath环境变量。想要修改日志属性，用户需要集群配置目录下指定配置目录(rm-config和nm-config)创建log4j.properties文件。YARN脚本也会使用环境变量定义服务使用的JVM堆的大小。  
 
-
-
-
+* 用法：yarn resourcemanager  
+* 类：org.apache.hadoop.yarn.server.resourcemanager.ResourceManager
+* 用法：yarn nodemanager
+* 类：org.apache.hadoop.yarn.server.nodemanager.NodeManager
+* 用法：yarn proxyserver
+* 类：org.apache.hadoop.yarn.server.webproxy.WebAppProxyServer  
 
 ##### RMAdmin  
+rmadmin命令会从命令行启动一个资源管理器的客户端。它用于刷新访问控制策略，调度器策略和ResourceManager注册节点。在rmadmin刷新命令后，并且集群没有请求重启相关服务，那么策略的更改会直接反应到集群上的。  
 
+RMAdminCLI类使用YARN protobuf服务去调用在org.apache.hadoop.yarn.server.resourcemanager包中的AdminService类中的方法。  
+
+* 用法：yarn rmadmin <options>
+* 类：org.apache.hadoop.yarn.client.cli.RMAdminCLI  
+
+**命令选项**  
+* -refreshQueues：重新加载队列的访问控制，状态和调度器属性。它会使用最新的配置文件重新初始化配置的调度器。
+* -refreshNodes：刷新ResourceManager中节点的信息。它会读取ResourceManager节点上include和exclude文件进而更新集群中included和excluded节点列表。
+* -refreshUserToGroupsMappings：
 
 
 
