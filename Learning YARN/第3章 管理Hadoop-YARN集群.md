@@ -136,13 +136,18 @@ RMAdminCLI类使用YARN protobuf服务去调用在org.apache.hadoop.yarn.server.
 **命令选项**  
 * -refreshQueues：重新加载队列的访问控制，状态和调度器属性。它会使用最新的配置文件重新初始化配置的调度器。
 * -refreshNodes：刷新ResourceManager中节点的信息。它会读取ResourceManager节点上include和exclude文件进而更新集群中included和excluded节点列表。
-* -refreshUserToGroupsMappings：
-
-
-
+* -refreshUserToGroupsMappings：基于配置的Hadoop安全组映射，通过刷新组的缓存更新用户为映射。
+* -refreshSuperUserGroupsConfiguration：刷新超级用户代理组映射，并更新定义在core-site.xml配置文件中hadoop.proxyuser设置的代理主机名和代理组。
+* -refreshAdminAcls：刷新YARN site/default配置文件中定义的yarn.admin.acl属性指定的资源管理器管理的访问控制列表。
+* -refreshServiceAcl：重新加载服务级别的验证策略文件，并且资源管理器也将从新加载验证策略文件。它会检查Hadoop安全验证是否开启并刷新下列资源管理器服务的访问控制列表：  
+    * IPC Server
+    * ApplicationMaster
+    * Client
+    * 资源追踪
+* -help [cmd]：显示给定命令的帮助信息，如果没有指定命令，则会显示所有命令  
 
 ##### DaemonLog  
-
+用于查看或者更新YARN ResourceManager和NodeManager守护进程的日志级别。
 
 
 
