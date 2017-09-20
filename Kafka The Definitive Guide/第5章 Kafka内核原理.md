@@ -6,7 +6,7 @@
 深入理解这三个主题对优化Kafka特别有用——理解这些机制目的是可以长时间更好的使用Kafka，而不是随便摆弄它。  
 
 ### 集群成员  
-Kafka使用Apache Zookeeper维护集群的当前成员broker的列表。每个broker都有一个唯一标识，该标识要么在broker配置文件中进行配置，要么自动生成。每当一个broker进程启动，它会使用它的ID向Zookeeper注册一个临时的节点。Kafka的不同组件都会订阅Zookeeper中broker的注册路径/brokers/ids，这样当broker增加或者删除的时候它们就会获得通知。  
+Kafka使用Apache Zookeeper维护集群的当前成员broker的列表。每个broker都有一个唯一标识，该标识要么在broker配置文件中进行配置，要么自动生成。每当一个broker进程启动，它会使用它的ID向Zookeeper注册一个临时的节点。Kafka的不同组件都会订阅Zookeeper中broker的注册路径/brokers/ids，这样当增加或者删除broker的时候它们就会获得通知。  
 
 如果你尝试使用同一个ID去启动另一个broker，那么你将会获得一个错误——the new broker will try to register, but fail because we already have a Zookeeper node for the same broker ID(新的broker尝试去注册，但是失败了，因为我们已经拥有一个具有相同broker ID的Zookeeper节点)。  
 
