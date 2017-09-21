@@ -1,3 +1,124 @@
 不管你是否使用Kafka作为一个队列，消息总线，或者数据存储平台，你将总是会通过编写一个生产者向Kafka写数据，一个消费者从Kafka读取数据，或者兼具两者的应用。  
 
 打个比方，在一个信用卡交易处理系统中，
+
+
+
+
+
+
+### 生产者概述  
+
+
+
+
+
+### 构造一个Kafka生产者  
+
+
+
+
+
+### 向Kafka发送一条消息  
+
+
+
+#### 同步的发送消息  
+
+
+
+#### 异步的发送消息  
+
+
+
+
+### 配置生产者  
+
+
+
+#### acks  
+
+
+
+#### buffer.memory  
+
+
+#### compression.type  
+
+
+
+#### retries  
+
+
+
+
+#### batch.size  
+
+
+
+
+#### linger.ms  
+
+
+
+
+#### client.id  
+
+
+
+
+#### max.in.flight.requests.per.connection  
+
+
+
+
+#### timeout.ms, request.timeout.ms, and metadata.fetch.timeout.ms  
+
+
+
+#### max.block.ms  
+
+
+
+#### max.request.size  
+
+
+
+#### receive.buffer.bytes和send.buffer.bytes
+
+
+
+### 序列化器  
+
+
+
+#### 自定义序列化器  
+
+
+
+#### 使用Apache Avro进行序列化  
+
+
+
+
+#### 使用Avro Records  
+
+
+
+
+### 分区  
+
+
+
+
+
+
+#### 实现一个自定义的分区策略  
+
+
+
+
+
+
+
+### 旧的Producer API
