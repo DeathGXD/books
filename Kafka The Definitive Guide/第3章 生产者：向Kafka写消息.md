@@ -7,13 +7,13 @@
 
 
 
-### 生产者概述  
+### Producer概述  
 
 
 
 
 
-### 构造一个Kafka生产者  
+### 构造一个Kafka Producer  
 
 
 
@@ -32,7 +32,7 @@
 
 
 
-### 配置生产者  
+### 配置Producer  
 
 
 
