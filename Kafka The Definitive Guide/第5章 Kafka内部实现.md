@@ -10,9 +10,9 @@ Kafka使用Apache Zookeeper维护集群当前成员broker的列表。每个broke
 
 如果你尝试使用同一个ID去启动另一个broker，那么你将会获得一个错误——新的broker尝试去注册，但是失败了，因为我们已经拥有一个具有相同broker ID的Zookeeper节点。  
 
-当一个broker与Zookeeper失去了连接，
+当一个broker失去了与Zookeeper的连接(通常是由于broker挂掉，但是由于网络分裂同样也可能引起这种情况，或者长时间垃圾收集阶段)，当broker启动时，broker创建的临时节点将会自动从Zookeeper中删除。Kafka中监视broker列表的组件将会收到broker挂掉的通知。  
 
-
+即使当broker停掉了，代表broker的节点消失了，broker ID仍然存在在其他数据结构中。比如，每一个主题的副本列表，包含了副本的broker ID。这种情况下，如果你完全丢失了一个broker并启动了一个带有旧broker ID的崭新的broker，它将会立刻加入到集群，替换掉丢失的broker，并拥有相同的分区和主题。  
 
 ### 控制器  
 
