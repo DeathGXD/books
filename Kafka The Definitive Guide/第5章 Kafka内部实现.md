@@ -34,7 +34,7 @@ Kafka使用Apache Zookeeper维护集群当前成员broker的列表。每个broke
 
 
 
-#### 处理请求  
+#### 生产请求  
 
 
 
