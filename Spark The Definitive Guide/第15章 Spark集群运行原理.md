@@ -100,7 +100,32 @@ Task和stage中有很多重要的属性，在我们结束这一章之前是很�
 
 
 #### Shuffle持久化  
-另一个比较常见的属性是shuffle持久化。当Spark需要执行一个不得不跨节点进行数据传输的操作时，比如reduceByKey操作(输入的相同key的数据需要从不同的几点汇聚在一起)，那么执行引擎不会在执行流水线操作，取而代之就是跨网络的shuffle操作。Spark在执行stage期间进行shuffle，总是首先将"源"task发送的数据以shuffle文件的形式写到task所在的本地磁盘。然后，执行分组和规约的stage会启动并运行task从shuffle文件拉取对应的记录执行计算(比如拉取并处理特定范围key的数据)。
+另一个比较常见的属性是shuffle持久化。当Spark需要执行一个不得不跨节点进行数据传输的操作时，比如reduceByKey操作(输入的相同key的数据需要从不同的几点汇聚在一起)，那么执行引擎不会在执行流水线操作，取而代之就是跨网络的shuffle操作。Spark在执行stage期间进行shuffle，总是首先将"源"task发送的数据以shuffle文件的形式写到task所在的本地磁盘。然后，执行分组和规约的stage会启动并运行task从shuffle文件拉取对应的记录执行计算(比如拉取并处理特定范围key的数据)。保存shuffle文件到磁盘，使得Spark运行这个stage作为源stage(如果没有足够的executor同时运行两个stage)，并且也可以让执行引擎重新启动失败的没有重新运行所有输入任务的reduce任务。  
+
+你会看到shuffle持久化一个显而易见的作用是，在已经shuffle的数据上运行新的job，不需要重新运行shuffle的源程序。因为shuffle文件早已写入到磁盘，Spark知道可以使用它们运行job后面的stage，而不需要重做更早的stage。在Spark UI和logs中，你将会看到之前的shuffle stage被标记为skipped。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ### 总结  
