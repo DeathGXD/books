@@ -6,7 +6,7 @@
 
 
 ### 架构  
-Flink 1.x的架构包含了各种组件，比如：得票；deploy，核心编程和API等。我们可以很容易比较最近的架构和Stratosphere的架构，并且看到它的变化。下面的图展示了组件，API和库：  
+Flink 1.x的架构包含了各种组件，比如：部署，核心处理和APIs等。我们可以很容易比较最近的架构和Stratosphere的架构，并且看到它的变化。下面的图展示了组件，API和库：  
 ![image](/Images/Flink/flink-architecture.png)  
 
 Flink有一个分层的架构，每一个组件都是特定层级的一部分。每一层都是建立在其他明确的抽象之上。Flink被设计成可以运行在本地机器上，运行在YARN集群上和运行在云上。Runtime是Flink核心的数据处理引擎，它接受通过API以JobGraph形式的程序。JobGraph是一个简单的，并行的数据流控(data flow)，带有一组生产和消费数据流(data stream)的tasks。DataStream和DataSet是API接口，程序员可以用它们定义Job。当程序编译完成，JobGraph就通过这些API产生。一旦被编译，DataSet API允许优化器生成最优的执行计划，而DataStream API使用一个流构造器实现更高效的执行的计划。  
