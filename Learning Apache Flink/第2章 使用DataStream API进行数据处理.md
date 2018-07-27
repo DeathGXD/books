@@ -23,7 +23,7 @@
 
 通常，你只需要使用getExectionEnvironment()方法即可。这个方法将会基于你的上下文做正确的事。如果你打算在一个本地的IDE中执行，那么你需要启动一个本地的执行环境。除此之外，你还可以执行JAR文件，那么Flink集群管理器将会在分布式环境下执行Flink程序。  
 
-如果你想要在自己的程序中创建一个本地或者远程的执行环境，那么你也可以选择通过使用createLocalEnvironment()和createRemoteEnvironment(String host, int port, String和jar文件)。  
+如果你想要在自己的程序中创建一个本地或者远程的执行环境，那么你也可以选择通过使用createLocalEnvironment()和createRemoteEnvironment(String host, int port, String... jarFiles)。  
 
 ### 数据源  
 数据源是Flink程序期望获取数据的地方。这是Flink程序中的第二步。Flink支持很多预实现的数据源函数。同时也支持编写自定义的数据源函数，因为任何不支持的数据源都可以编程简单的实现。首先让我们弄明白Flink内置的数据源函数。  
